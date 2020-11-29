@@ -1,0 +1,224 @@
+<%@ page pageEncoding="utf-8"%>
+<!-- 
+200303 호석
+ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+<!-- favicon -->
+<link rel="shortcut icon" type="image⁄x-icon" href="resources/images/favicon.png">
+
+<!-- 다음 우편번호 검색 -->
+<script src="https://ssl.daumcdn.net/dmaps/map_js_init/postcode.v2.js"></script>
+<script type="text/javascript" src="resources/js/jquery.js"></script>
+<script type="text/javascript" src="resources/js/jquery-ui.min.js"></script>
+<script type="text/javascript" src="resources/js/tt_slideshow.js"></script>
+<script type="text/javascript" src="resources/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="resources/js/Customjs.js"></script>
+<script type="text/javascript" src="resources/js/contactform.js"></script>
+<script type="text/javascript" src="resources/js/flatpicker.js"></script>
+
+<script src="https://ssl.daumcdn.net/dmaps/map_js_init/postcode.v2.js"></script>
+<script src="https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+<script type="text/javascript" src="resources/js/common.js"></script>
+
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>댕댕 텔링</title>
+
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+
+<link rel="stylesheet" href="resources/css/bootstrap.css" type="text/css" media="screen" />
+<link rel="stylesheet" href="resources/css/style.css" type="text/css" media="screen" />
+
+<!--[if lte IE 8]>
+<link rel="stylesheet"  href="menuie.css" type="text/css" media="screen"/>
+<link rel="stylesheet"  href="vmenuie.css" type="text/css" media="screen"/>
+<![endif]-->
+<script type="text/javascript" src="resources/js/totop.js"></script>
+
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+<script type="text/javascript" src="//code.jquery.com/jquery-1.11.0.min.js"></script>
+<script type="text/javascript" src="//code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
+<script type="text/javascript" src="slick/slick.min.js"></script>
+
+<link href="http://netdna.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.css" rel="stylesheet">
+
+<!-- 게시판 에디터 Summernote-->
+<script
+	src="http://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.js"></script>
+<script
+	src="http://netdna.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.js"></script>
+
+<!-- 게시판 에디터 summernote css/js-->
+<link href="http://cdnjs.cloudflare.com/ajax/libs/summernote/0.8.8/summernote.css" rel="stylesheet">
+<script src="http://cdnjs.cloudflare.com/ajax/libs/summernote/0.8.8/summernote.js"></script>
+
+<!-- 게시판 에디터 스크립트 -->
+<script>
+	$(document).ready(function() {
+		$('#summernote').summernote();
+	});
+</script>
+
+<!-- 매칭부분 -->
+<link rel="stylesheet" href="font-awesome-4.7.0/css/font-awesome.min.css">
+<!-- Font Awesome -->
+<!--    <link rel="stylesheet" href="css/bootstrap.min.css"> -->
+<!-- Bootstrap style -->
+<link rel="stylesheet" href="resoureces/css/tooplate-style.css">
+
+<!--  Flatpicker Styles  -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.2.3/flatpickr.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.2.3/themes/meterial_blue.css">
+
+<!-- 별점 
+<style>
+.star-rating {
+	width: 205px;
+}
+
+.star-rating, .star-rating span {
+	display: inline-block;
+	height: 39px;
+	overflow: hidden;
+	background: url(star.png) no-repeat;
+}
+
+.star-rating span {
+	background-position: left bottom;
+	line-height: 0;
+	vertical-align: top;
+}
+</style> -->
+
+<!--[if IE 7]>
+<style type="text/css" media="screen">
+#ttr_vmenu_items  li.ttr_vmenu_items_parent {margin-left:-16px;font-size:0px;}
+</style>
+<![endif]-->
+<!--[if lt IE 9]>
+<script type="text/javascript" src="html5shiv.js">
+</script>
+<script type="text/javascript" src="respond.min.js">
+</script>
+<![endif]-->
+
+
+<!-- flatpickr -->
+<style>
+/*datepickr 버튼 롤오버 시 손가락 모양 표시*/
+.ui-datepicker-trigger{cursor: pointer;}
+/*datepicer input 롤오버 시 손가락 모양 표시*/
+.hasDatepicker{cursor: pointer;}
+</style>
+
+
+<!-- 이미지 슬라이드 -->
+<style>
+body {
+  font-family: Arial;
+  margin: 0;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+img {
+  vertical-align: middle;
+}
+
+/* Position the image container (needed to position the left and right arrows) */
+.container {
+  position: relative;
+}
+
+/* Hide the images by default */
+.mySlides {
+  display: none;
+}
+
+/* Add a pointer when hovering over the thumbnail images */
+.cursor {
+  cursor: pointer;
+}
+
+/* Next & previous buttons */
+.prev,
+.next {
+  cursor: pointer;
+  position: absolute;
+  top: 40%;
+  width: auto;
+  padding: 16px;
+  margin-top: -50px;
+  color: white;
+  font-weight: bold;
+  font-size: 20px;
+  border-radius: 0 3px 3px 0;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Position the "next button" to the right */
+.next {
+  right: 0;
+  border-radius: 3px 0 0 3px;
+}
+
+/* On hover, add a black background color with a little bit see-through */
+.prev:hover,
+.next:hover {
+  background-color: rgba(0, 0, 0, 0.8);
+}
+
+/* Number text (1/3 etc) */
+.numbertext {
+  color: #f2f2f2;
+  font-size: 12px;
+  padding: 8px 12px;
+  position: absolute;
+  top: 0;
+}
+
+/* Container for image text */
+.caption-container {
+  text-align: center;
+  background-color: #222;
+  padding: 1px 16px;
+  color: white;
+}
+
+.minirow {
+  float: right;
+  position: relative;
+  left: -50%;
+  content: "";
+  display: table;
+  clear: both;
+}
+
+/* Six columns side by side */
+.minicolumn {
+  float: left;
+  position: relative;
+  left: 48%;
+
+}
+
+/* Add a transparency effect for thumnbail images */
+.demo {
+  opacity: 0.6;
+}
+
+.active,
+.demo:hover {
+  opacity: 1;
+}
+
+
+</style>
+</head>

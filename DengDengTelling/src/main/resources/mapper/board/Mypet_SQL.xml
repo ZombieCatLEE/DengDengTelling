@@ -1,0 +1,386 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="mypet">
+	
+	<!-- MYPET 글 작성 -->
+	<insert id="insertBoard" parameterType="hashmap" useGeneratedKeys="true" keyProperty="BOARD_NO">
+		<selectKey keyProperty="BOARD_NO" resultType="string" order="BEFORE">
+			SELECT MYPET_SEQ.NEXTVAL FROM DUAL
+		</selectKey>
+		<![CDATA[  
+			INSERT INTO MYPET (
+				BOARD_TYPE,
+				BOARD_NO,
+				MYPET_SUBJECT,
+				ID,
+				MYPET_WRITER,
+				MYPET_CONTENT,
+				MYPET_DATE,
+				MYPET_COUNT,
+				MAIN_IMG
+			)
+			VALUES (
+				'MYPET',
+				#{BOARD_NO},
+				#{MYPET_SUBJECT},
+				#{ID},
+				#{MYPET_WRITER},
+				#{MYPET_CONTENT},
+				SYSDATE,
+				0,
+				#{MAIN_IMG}
+			)
+		]]>
+	</insert> <!-- 게시판에서는 회원 펫시터 아이디를 ID로 쓰기 때문에 변경합니다 values에 '테스트1'을 #{ID}로 변경해주세요 -->
+	
+	
+		
+	<!-- 회원정보 -->
+	<select id="selectMemInfo" parameterType="hashmap" resultType="hashmap">
+		<![CDATA[
+			SELECT
+					ID,
+					NAME,
+					MEMBER_DIVISION
+			FROM
+				(
+				SELECT 
+						MEM_ID AS ID,
+						NAME,
+						MEMBER_DIVISION
+				FROM
+						MEMBER
+	    
+						UNION ALL
+	
+				SELECT
+						PSMEM_ID AS ID,
+						NAME,
+						MEMBER_DIVISION
+				FROM
+						PETSITTER
+			    )
+			WHERE
+				ID = #{ID}
+		]]>
+	</select>
+	   
+	   
+	   
+	<!-- MYPET 상세보기 -->
+	<select id="selectBoardDetail" parameterType="hashmap" resultType="hashmap">
+		<![CDATA[
+				SELECT
+					BOARD_TYPE,
+					BOARD_NO,
+					MYPET_SUBJECT,
+					ID,
+					MYPET_WRITER,
+					MYPET_CONTENT,
+					MYPET_DATE,
+					MYPET_COUNT
+				FROM
+					MYPET
+				WHERE 
+					BOARD_NO = #{BOARD_NO}
+		]]>
+	</select>
+		
+		
+		
+	<!-- MYPET 글 수정 -->
+	<update id="updateBoard" parameterType="hashMap">
+		<![CDATA[
+			UPDATE MYPET
+			SET
+				MYPET_SUBJECT = #{MYPET_SUBJECT},
+				MYPET_CONTENT = #{MYPET_CONTENT}
+			WHERE
+				BOARD_NO = #{BOARD_NO}
+		]]>
+	</update>	
+		
+		
+		
+	<!-- MYPET 글 삭제 -->
+	<delete id="deleteBoard" parameterType="hashmap"> 
+		<![CDATA[
+			DELETE MYPET
+			WHERE
+				BOARD_NO = #{BOARD_NO}
+		]]>
+	</delete>
+		
+	   
+	   
+	<!-- MYPET 글 조회수 증가 -->
+	<update id="updateHitCnt" parameterType="hashMap">
+		<![CDATA[
+			UPDATE MYPET
+			SET
+				MYPET_COUNT = NVL(MYPET_COUNT, 0) + 1
+			WHERE
+				BOARD_TYPE = 'MYPET' AND BOARD_NO = #{BOARD_NO}
+		]]>
+	</update>   
+	   
+	   
+	   
+	<!-- 파일 업로드 -->
+	<insert id="insertFile" parameterType="hashmap">
+		<![CDATA[
+	        INSERT INTO BOARD_FILE (
+	         		BOARD_TYPE,
+	       			BOARD_NO,
+	       			BOARD_FILE_NO,
+	                BOARD_ORIGINAL_FILE_NAME,
+	         		BOARD_STORED_FILE_NAME,
+	       			BOARD_FILE_SIZE,
+	       			BOARD_DATE,
+	       			BOARD_CREA_ID	
+	         )
+	         VALUES (
+	         		'MYPET',
+	        		#{BOARD_NO},
+	            	BOARD_FILE_SEQ.NEXTVAL,
+	                #{BOARD_ORIGINAL_FILE_NAME},
+	         		#{BOARD_STORED_FILE_NAME},
+	            	#{BOARD_FILE_SIZE},
+	            	sysdate,
+	            	#{BOARD_CREA_ID}
+	         )
+	   	]]>
+	</insert>
+	   
+	   
+	   
+	<!-- 파일 리스트 -->
+	<select id="selectFileList" parameterType="hashmap" resultType="hashmap">
+		<![CDATA[
+	         SELECT
+	         	  BOARD_TYPE,
+	              BOARD_FILE_NO,
+	              BOARD_ORIGINAL_FILE_NAME,
+	              ROUND(BOARD_FILE_SIZE/1024,1) AS BOARD_FILE_SIZE,
+	              BOARD_STORED_FILE_NAME
+	              
+	         FROM
+	              BOARD_FILE
+	         WHERE
+	              BOARD_TYPE = 'MYPET' AND BOARD_NO = #{BOARD_NO} AND FILE_DEL = 'N'
+	    ]]>
+	</select>
+	   	
+	   	
+	   	
+	<!-- MYPET 파일 수정 -->
+	<update id="updateFile" parameterType="hashmap">  
+		<![CDATA[
+			UPDATE BOARD_FILE 
+			SET
+				FILE_DEL = 'N'
+			WHERE
+				BOARD_TYPE = 'MYPET' AND BOARD_FILE_NO = #{BOARD_FILE_NO}						
+		]]>
+	</update> 
+		
+		
+		
+	<!-- MYPET 파일 삭제 -->
+	<update id="deleteFile" parameterType="hashmap">
+		<![CDATA[
+			UPDATE BOARD_FILE
+			SET 
+				FILE_DEL = 'Y' 
+			WHERE 
+				BOARD_TYPE = 'MYPET' AND BOARD_NO = #{BOARD_NO}
+		]]>
+	</update>
+	
+	
+	
+	<!-- MYPET 파일정보 -->
+	<select id="selectFileInfo" parameterType="hashmap" resultType="hashmap">
+		<![CDATA[
+			SELECT
+					BOARD_STORED_FILE_NAME,
+					BOARD_ORIGINAL_FILE_NAME
+			FROM
+					BOARD_FILE
+			WHERE
+					BOARD_TYPE = 'MYPET' AND BOARD_FILE_NO = #{BOARD_FILE_NO}
+		]]>
+	</select>
+	
+	
+	
+	<!-- MYPET 썸네일 등록 -->
+	<update id="mypetThumbnail" parameterType="hashmap"> 
+		<![CDATA[ 
+			UPDATE MYPET
+				SET MAIN_IMG = (
+								SELECT
+							  		BOARD_STORED_FILE_NAME
+								FROM
+							  		BOARD_FILE
+								WHERE
+							  		BOARD_FILE_NO = 
+							  		(
+								    	SELECT 
+								     		min(BOARD_FILE_NO)
+								    	FROM
+								      		BOARD_FILE
+								    	WHERE
+								      		BOARD_TYPE = 'MYPET' AND BOARD_NO = #{BOARD_NO} AND FILE_DEL = 'N'
+		      						)
+								)
+			WHERE BOARD_TYPE = 'MYPET' AND BOARD_NO = #{BOARD_NO}
+		]]>
+	</update>
+	
+	
+	
+	  
+	<!-- 썸네일 등록 -->
+	<!-- <update id="mypetThumbnail" parameterType="hashmap">
+	   <![CDATA[
+	   		UPDATE MYPET 
+	   		SET
+				MAIN_IMG = #{MAIN_IMG}
+			WHERE
+				BOARD_TYPE = 'MYPET' AND BOARD_NO = #{BOARD_NO}
+	   ]]>
+	</update>  -->
+	
+	
+		
+	<!-- MYPET 리스트 보기 -->
+	<select id="selectBoardList" parameterType="hashmap" resultType="hashmap">
+		<![CDATA[
+			SELECT
+				BOARD_TYPE,
+				BOARD_NO,
+				MYPET_SUBJECT,
+				ID,
+				MYPET_WRITER,
+				MYPET_CONTENT,
+				MAIN_IMG,
+				MYPET_DATE,
+				MYPET_COUNT
+			FROM
+				MYPET
+			ORDER BY BOARD_NO DESC
+		]]>
+	</select>
+		
+		
+	
+	<!-- MYPET 댓글 리스트 -->
+	<select id="selectCmtList" parameterType="hashmap" resultType="hashmap">
+		<![CDATA[
+			SELECT
+				NAME, BOARD_NO, MYPET_COMMENT_NO, ID, MYPET_COMMENT_WRITER,
+				MYPET_COMMENT_CONTENT, MYPET_COMMENT_DATE, MYPET_RE_COMMENT_NO, MYPET_RE_COMMENT_STEP 
+			FROM
+				(
+				SELECT
+					NAME, BOARD_NO, MYPET_COMMENT_NO, ID, MYPET_COMMENT_WRITER,
+					MYPET_COMMENT_CONTENT, MYPET_COMMENT_DATE, MYPET_RE_COMMENT_NO, MYPET_RE_COMMENT_STEP 
+				FROM
+					(
+					SELECT
+						MEMBER.NAME AS NAME,
+						MYPET_COMMENT.BOARD_NO AS BOARD_NO,
+						MYPET_COMMENT.MYPET_COMMENT_NO AS MYPET_COMMENT_NO,
+						MYPET_COMMENT.ID AS ID,
+						MYPET_COMMENT.MYPET_COMMENT_WRITER AS MYPET_COMMENT_WRITER,
+						MYPET_COMMENT.MYPET_COMMENT_CONTENT AS MYPET_COMMENT_CONTENT,
+						MYPET_COMMENT.MYPET_COMMENT_DATE AS MYPET_COMMENT_DATE,
+						MYPET_COMMENT.MYPET_RE_COMMENT_NO AS MYPET_RE_COMMENT_NO,
+						MYPET_COMMENT.MYPET_RE_COMMENT_STEP AS MYPET_RE_COMMENT_STEP
+					FROM
+						MYPET_COMMENT, MEMBER
+					WHERE
+						MYPET_COMMENT.ID = MEMBER.MEM_ID
+					)
+				
+				UNION ALL
+				
+				SELECT
+					NAME, BOARD_NO, MYPET_COMMENT_NO, ID, MYPET_COMMENT_WRITER,
+					MYPET_COMMENT_CONTENT, MYPET_COMMENT_DATE, MYPET_RE_COMMENT_NO, MYPET_RE_COMMENT_STEP 
+				FROM
+					(
+					SELECT
+						PETSITTER.NAME AS NAME,
+						MYPET_COMMENT.BOARD_NO AS BOARD_NO,
+						MYPET_COMMENT.MYPET_COMMENT_NO AS MYPET_COMMENT_NO,
+						MYPET_COMMENT.ID AS ID,
+						MYPET_COMMENT.MYPET_COMMENT_WRITER AS MYPET_COMMENT_WRITER,
+						MYPET_COMMENT.MYPET_COMMENT_CONTENT AS MYPET_COMMENT_CONTENT,
+						MYPET_COMMENT.MYPET_COMMENT_DATE AS MYPET_COMMENT_DATE,
+						MYPET_COMMENT.MYPET_RE_COMMENT_NO AS MYPET_RE_COMMENT_NO,
+						MYPET_COMMENT.MYPET_RE_COMMENT_STEP AS MYPET_RE_COMMENT_STEP
+					FROM
+						MYPET_COMMENT, PETSITTER
+					WHERE
+						MYPET_COMMENT.ID = PETSITTER.PSMEM_ID
+					)
+				)
+			WHERE 
+				BOARD_NO = #{BOARD_NO}
+			ORDER BY MYPET_COMMENT_NO ASC
+		]]>
+	</select>
+		<!-- 		SELECT
+				MYPET_COMMENT_NO,
+				MYPET_COMMENT_CONTENT,
+				ID,
+				MYPET_COMMENT_WRITER,
+				MYPET_COMMENT_DATE
+			FROM
+				MYPET_COMMENT
+			WHERE
+				BOARD_NO = #{BOARD_NO}
+				ORDER BY MYPET_COMMENT_NO ASC -->
+	
+	
+	<!-- MYPET 댓글 작성 -->
+	<insert id="insertComment" parameterType="hashmap">
+		<![CDATA[
+			INSERT INTO MYPET_COMMENT (
+					BOARD_NO,
+					MYPET_COMMENT_NO,
+					ID,
+					MYPET_COMMENT_WRITER,
+					MYPET_COMMENT_CONTENT,
+					MYPET_COMMENT_DATE,
+					MYPET_RE_COMMENT_NO
+				)
+				VALUES (
+					#{BOARD_NO},
+					MYPET_COMMENT_SEQ.NEXTVAL,
+					#{ID},
+					#{MYPET_COMMENT_WRITER},
+					#{MYPET_COMMENT_CONTENT},
+					SYSDATE,
+					MYPET_COMMENT_SEQ.NEXTVAL
+				)
+		]]>
+	</insert> 
+	
+	
+	
+	<!-- MYPET 댓글 삭제 -->
+	<delete id="deleteComment" parameterType="hashmap">
+		<![CDATA[
+			DELETE 
+				MYPET_COMMENT
+			WHERE
+				MYPET_COMMENT_NO = #{MYPET_COMMENT_NO}
+		]]>
+	</delete>
+
+</mapper>

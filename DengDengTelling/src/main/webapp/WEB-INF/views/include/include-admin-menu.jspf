@@ -1,0 +1,18 @@
+<%@ page pageEncoding="utf-8"%>
+
+<!-- My page 제목 -->
+<nav style="height: 10em">
+	<div id="ttr_menu_inner_in">
+		<div class="menuforeground"></div>
+		<div style="text-align: left">
+			<div style="position: relative; top: 1em; left: 2em;">
+				<span style="font-weight: bold; font-size: 2em;">Admin</span>
+			</div>
+<!-- My page 제목 -->
+
+
+		</div>
+	</div>
+</nav>
+
+<!-- My page Bar -->

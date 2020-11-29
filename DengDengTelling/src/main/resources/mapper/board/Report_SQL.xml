@@ -1,0 +1,353 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 20.02.11 -->
+<mapper namespace="report">
+	
+	<!-- REPORT 리스트 -->
+	<select id="selectBoardList" parameterType="hashmap" resultType="hashmap">
+		<![CDATA[
+			SELECT
+				ID,
+				ROW_NUMBER() OVER(ORDER BY BOARD_NO) NUM,
+				BOARD_NO,
+				RNUM,
+				RE_RNUM,
+				REPORT_SUBJECT,
+				REPORT_WRITER,
+				REPORT_CONTENT,
+				TO_CHAR(REPORT_DATE, 'YYYY/MM/DD') AS REPORT_DATE,
+				REPORT_COUNT,
+				REPORT_HEADER,
+				REPORT_PRIVATE_CHECK,	
+				RANK() OVER (ORDER BY RNUM DESC) ROW_NUM,
+				ROW_NUMBER() OVER (ORDER BY RE_RNUM DESC) RE_ROW_NUM,
+				REPORT_RE_STEP
+			FROM	
+				(SELECT		
+					ID,
+					BOARD_NO,
+					REPORT_SUBJECT,
+					REPORT_WRITER,
+					REPORT_CONTENT,
+					REPORT_DATE,
+					REPORT_COUNT,
+					REPORT_HEADER,
+					REPORT_PRIVATE_CHECK,
+					RANK() OVER (ORDER BY REPORT_RE_NO DESC) RNUM,
+					REPORT_RE_NO,
+					ROW_NUMBER() OVER (ORDER BY REPORT_RE_STEP DESC) RE_RNUM,
+					REPORT_RE_STEP
+				FROM
+					REPORT 
+				) ORDER BY ROW_NUM DESC, RE_ROW_NUM ASC
+		]]>
+	</select>
+	
+	
+	
+	<!-- 전체게시물 수 -->
+	<select id="countBoardList" resultType="Integer">
+		<![CDATA[
+			SELECT
+				COUNT(*)
+			FROM
+				REPORT				
+		]]>
+	</select>
+	
+	
+	
+	<!-- REPORT 글작성 -->
+	<insert id="insertBoard" parameterType="hashmap" useGeneratedKeys="true" keyProperty="BOARD_NO">
+		<selectKey keyProperty="BOARD_NO" resultType="string" order="BEFORE">
+	 		SELECT REPORT_SEQ.NEXTVAL FROM DUAL
+	 	</selectKey>
+		<![CDATA[  
+			INSERT INTO REPORT (
+				BOARD_NO,
+				REPORT_SUBJECT,
+				ID,
+				REPORT_WRITER,
+				REPORT_COUNT,
+				REPORT_CONTENT,
+				REPORT_DATE,
+				REPORT_HEADER,
+				REPORT_PRIVATE_CHECK,
+				REPORT_RE_NO
+			)
+       		VALUES ( 
+				#{BOARD_NO},
+				#{REPORT_SUBJECT},
+				#{ID},
+				#{REPORT_WRITER},
+				0,
+				#{REPORT_CONTENT},
+				SYSDATE,
+				#{REPORT_HEADER},
+				'Y',
+				#{BOARD_NO}
+			)
+		]]>
+	</insert>
+	
+	
+	
+	<!-- REPORT 글 조회수 증가 -->
+	<update id="updateHitCnt" parameterType="hashmap">
+		<![CDATA[
+				UPDATE 
+					REPORT
+				SET
+					REPORT_COUNT = NVL(REPORT_COUNT, 0) + 1
+				WHERE
+					BOARD_NO = #{BOARD_NO}
+		]]>
+	</update>
+	
+	
+	
+	<!-- REPORT 상세보기 -->
+	<select id="selectBoardDetail" parameterType="hashmap" resultType="hashmap">
+		<![CDATA[
+				SELECT * 
+				FROM
+					REPORT
+				WHERE 
+					BOARD_NO = #{BOARD_NO}
+		]]>
+	</select>
+	
+	
+	
+	<!-- REPORT 수정 -->
+	<update id="updateBoard" parameterType="hashMap">
+		<![CDATA[
+			UPDATE REPORT
+			SET
+				REPORT_SUBJECT = #{REPORT_SUBJECT},
+				REPORT_CONTENT = #{REPORT_CONTENT},
+				REPORT_HEADER = #{REPORT_HEADER}
+			WHERE
+				BOARD_NO = #{BOARD_NO}
+		]]>
+	</update>	
+
+
+
+	<!-- REPORT 삭제 -->
+	<delete id="deleteBoard" parameterType="hashmap"> 
+		<![CDATA[
+			DELETE
+				REPORT
+			WHERE
+				BOARD_NO = #{BOARD_NO}
+		]]>
+	</delete>
+	
+	
+	
+	<!-- REPORT 파일 추가 -->
+	<insert id="insertFile" parameterType="hashmap">
+		<![CDATA[
+	         INSERT INTO BOARD_FILE (
+	         		BOARD_TYPE,
+	       			BOARD_NO,
+	       			BOARD_FILE_NO,
+	         		BOARD_ORIGINAL_FILE_NAME,
+	         		BOARD_STORED_FILE_NAME,
+	         		BOARD_FILE_SIZE,
+	         		BOARD_DATE,
+	         		BOARD_CREA_ID
+	         )
+	         VALUES (
+	         		'REPORT',
+	        		#{BOARD_NO},
+	            	BOARD_FILE_SEQ.NEXTVAL,
+	         		#{BOARD_ORIGINAL_FILE_NAME},
+	         		#{BOARD_STORED_FILE_NAME},
+	         		#{BOARD_FILE_SIZE},
+	         		SYSDATE,
+	         		#{BOARD_CREA_ID}
+	         )
+     	]]>
+  	</insert>
+	
+	
+	
+	<!-- REPORT 파일 리스트 -->
+	<select id="selectFileList" parameterType="hashmap" resultType="hashmap">
+	     <![CDATA[
+	        SELECT
+	            BOARD_FILE_NO,
+	            BOARD_ORIGINAL_FILE_NAME,
+	            ROUND(BOARD_FILE_SIZE/1024,1) AS BOARD_FILE_SIZE,
+	            BOARD_STORED_FILE_NAME
+	        FROM
+	            BOARD_FILE
+	        WHERE
+	            BOARD_TYPE = 'REPORT' AND BOARD_NO = #{BOARD_NO} AND FILE_DEL = 'N'
+	      ]]>
+   	</select>
+
+
+
+	<!-- REPORT 파일 수정 -->
+	<update id="updateFile" parameterType="hashmap">
+		<![CDATA[
+			UPDATE BOARD_FILE 
+			SET
+				FILE_DEL = 'N'
+			WHERE
+				BOARD_TYPE = 'REPORT' AND BOARD_FILE_NO = #{BOARD_FILE_NO}
+		]]>
+	</update>
+
+
+
+	<!-- REPORT 파일 삭제 -->
+	<update id="deleteFile" parameterType="hashmap">
+		<![CDATA[
+			UPDATE BOARD_FILE
+			SET 
+				FILE_DEL = 'Y' 
+			WHERE 
+				BOARD_TYPE = 'REPORT' AND BOARD_NO = #{BOARD_NO}
+		]]>
+	</update>
+	
+	
+	
+	<!-- REPORT 파일정보 -->
+	<select id="selectFileInfo" parameterType="hashmap" resultType="hashmap">
+		<![CDATA[
+			SELECT
+					BOARD_STORED_FILE_NAME,
+					BOARD_ORIGINAL_FILE_NAME
+			FROM
+					BOARD_FILE
+			WHERE
+					BOARD_TYPE = 'REPORT' AND BOARD_FILE_NO = #{BOARD_FILE_NO}
+		]]>
+	</select>
+	
+	
+	
+	<!-- 멤버 정보 -->
+	<select id="selectMemInfo" parameterType="hashmap" resultType="hashmap">
+		<![CDATA[
+			SELECT
+					ID,
+					NAME,
+					MEMBER_DIVISION
+			FROM
+				(
+				SELECT 
+						MEM_ID AS ID,
+						NAME,
+						MEMBER_DIVISION
+				FROM
+						MEMBER
+    
+						UNION ALL
+
+				SELECT
+						PSMEM_ID AS ID,
+						NAME,
+						MEMBER_DIVISION
+				FROM
+						PETSITTER
+			    )
+			WHERE ID = #{ID}
+		]]>
+	</select>
+	
+	
+	
+	<!-- REPORT 답변 작성(관리자) -->
+	<insert id="insertReplyBoard" parameterType="hashmap" useGeneratedKeys="true" keyProperty="BOARD_NO">
+		<selectKey keyProperty="BOARD_NO" resultType="string" order="BEFORE">
+	 		SELECT REPORT_SEQ.NEXTVAL FROM DUAL
+	 	</selectKey>
+		<![CDATA[
+			INSERT INTO REPORT (
+				BOARD_NO,
+				REPORT_SUBJECT,
+				ID,
+				REPORT_WRITER,
+				REPORT_CONTENT,
+				REPORT_DATE,
+				REPORT_HEADER,
+				REPORT_PRIVATE_CHECK,
+				REPORT_RE_NO,
+				REPORT_RE_STEP
+			)
+			VALUES (
+				#{BOARD_NO},
+				#{REPORT_SUBJECT},
+				#{ID},
+				#{REPORT_WRITER},
+				#{REPORT_CONTENT},
+				SYSDATE,
+				#{REPORT_HEADER},
+				'Y',
+				#{REPORT_RE_NO},
+				1
+			)
+		]]>
+	</insert>
+	
+	
+	
+	<!-- QNA 답변 수정(관리자) -->
+	<update id="updateReplyBoard" parameterType="hashMap">
+		<![CDATA[
+			UPDATE QNA
+			SET
+				QNA_SUBJECT = #{QNA_SUBJECT},
+				QNA_CONTENT = #{QNA_CONTENT},
+				QNA_HEADER = #{QNA_HEADER}
+				QNA_RE_NO = #{QNA_RE_NO},
+				QNA_RE_STEP = 1
+			WHERE
+				BOARD_NO = #{BOARD_NO}
+		]]>
+	</update>
+	
+	
+	
+	<!-- 관리자 정보 -->
+	<select id="selectAdminInfo" parameterType="hashmap" resultType="hashmap">
+		<![CDATA[
+			SELECT
+				ADMIN_ID,
+				ADMIN_NAME
+			FROM
+				ADMIN_ACCOUNT
+			WHERE 
+				ADMIN_ID = #{ADMIN_ID}
+		]]>
+	</select>
+	
+	
+	
+	<!-- REPORT 검색 (제목,작성자,내용) -->
+	<select id="reportSearch" resultType="hashmap" parameterType="hashmap">
+			SELECT *
+			FROM
+				REPORT
+			WHERE
+				<choose>
+					<when test = "REPORT_SUBJECT != NULL">
+						REPORT_SUBJECT LIKE '%'||#{REPORT_SUBJECT}||'%'
+				    </when>
+				    <when test = "REPORT_WRITER != NULL">
+						REPORT_WRITER LIKE '%'||#{REPORT_WRITER}||'%'
+				    </when>
+				    <when test = "REPORT_CONTENT != NULL">
+				   		REPORT_CONTENT LIKE '%'||#{REPORT_CONTENT}||'%' 
+				    </when>
+				</choose>
+			ORDER BY BOARD_NO DESC
+	</select>
+	
+</mapper>

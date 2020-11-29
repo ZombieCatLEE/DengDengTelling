@@ -1,0 +1,763 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="adminSql">
+
+	<!-- 로그인 --> <!-- 쿼리 수정 200203 -->
+	<select id="adminLogin" parameterType="hashmap" resultType="hashmap">
+		<![CDATA[
+			SELECT
+				ADMIN_ID, ADMIN_PW, ADMIN_NAME
+			FROM
+				ADMIN_ACCOUNT
+			WHERE
+				ADMIN_ID = #{ADMIN_ID}
+		]]>
+	</select>
+
+
+	<!-- 회원 정보(불러오기) --> <!-- 일반회원 정보, 펫시터 정보, 펫 마릿수 -->
+	<select id="selectAllMemberList" parameterType="hashmap" resultType="hashmap"> 
+			<![CDATA[
+				SELECT
+					ROW_NUMBER() OVER(ORDER BY NO) NUM, MIN(ID) ID, MIN(NAME) NAME, MIN(PHONE) PHONE, MIN(EMAIL) EMAIL, MIN(SEX) SEX, MIN(BIRTHDAY) BIRTHDAY, MIN(ADDRESS1) ADDRESS1,
+					MIN(MEM_TYPE) MEM_TYPE, DECODE(COUNT(PET_MEM)||'마리', '0', '없음', COUNT(PET_MEM)||'마리') PET_COUNT
+				FROM
+					(
+					SELECT
+						NO, ID, NAME, PHONE, EMAIL, SEX, BIRTHDAY, ADDRESS1, MEM_TYPE, PET_MEM
+					FROM
+						(
+						SELECT
+							MEMBER.MEM_NO AS NO, MEMBER.MEM_ID AS ID, MEMBER.NAME AS NAME, MEMBER.PHONE AS PHONE, MEMBER.EMAIL AS EMAIL,
+							MEMBER.SEX AS SEX, MEMBER.BIRTHDAY AS BIRTHDAY, MEMBER.ADDRESS1 AS ADDRESS1, MEMBER.MEMBER_DIVISION AS MEM_TYPE,
+							PET_MEMBER.PET_MEM_NO AS PET_MEM
+						FROM
+							(
+							SELECT
+								MEM_NO, MEM_ID, NAME, PHONE, EMAIL, SEX, BIRTHDAY, ADDRESS1, MEMBER_DIVISION
+							FROM
+								MEMBER
+							)
+						MEMBER, PET_MEMBER
+					WHERE 
+						MEMBER.MEM_ID = PET_MEMBER.ID(+)
+						)
+      
+					UNION ALL
+
+					SELECT
+						NO, ID, NAME, PHONE, EMAIL, SEX, BIRTHDAY, ADDRESS1, MEM_TYPE, PET_MEM
+					FROM
+						(
+						SELECT
+							PETSITTER.PSMEM_NO AS NO, PETSITTER.PSMEM_ID AS ID, PETSITTER.NAME AS NAME, PETSITTER.PHONE AS PHONE, PETSITTER.EMAIL AS EMAIL,
+							PETSITTER.SEX AS SEX, PETSITTER.BIRTHDAY AS BIRTHDAY, PETSITTER.ADDRESS1 AS ADDRESS1, PETSITTER.MEMBER_DIVISION AS MEM_TYPE,
+							PET_MEMBER.PET_MEM_NO AS PET_MEM
+						FROM
+							(
+							SELECT
+								PSMEM_NO, PSMEM_ID, NAME, PHONE, EMAIL, SEX, BIRTHDAY, ADDRESS1, MEMBER_DIVISION
+							FROM
+								PETSITTER
+							)
+						PETSITTER, PET_MEMBER
+					WHERE 
+						PETSITTER.PSMEM_ID = PET_MEMBER.ID(+)
+					))
+				GROUP BY NO
+				ORDER BY NO DESC
+			]]>
+	</select>
+	
+	
+	<!-- 회원 검색 (이름,ID) -->
+	<select id="memSearch" resultType="hashmap" parameterType="hashmap">
+		SELECT
+			ROW_NUMBER() OVER(ORDER BY NO) NUM, MIN(ID) ID, MIN(NAME) NAME, MIN(PHONE) PHONE, MIN(EMAIL) EMAIL, MIN(SEX) SEX, MIN(BIRTHDAY) BIRTHDAY, MIN(ADDRESS1) ADDRESS1,
+			MIN(MEM_TYPE) MEM_TYPE, DECODE(COUNT(PET_MEM)||'마리', '0', '없음', COUNT(PET_MEM)||'마리') PET_COUNT
+		FROM
+			(
+			SELECT
+				NO, ID, NAME, PHONE, EMAIL, SEX, BIRTHDAY, ADDRESS1, MEM_TYPE, PET_MEM
+			FROM
+				(
+				SELECT
+					MEMBER.MEM_NO AS NO, MEMBER.MEM_ID AS ID, MEMBER.NAME AS NAME, MEMBER.PHONE AS PHONE, MEMBER.EMAIL AS EMAIL,
+					MEMBER.SEX AS SEX, MEMBER.BIRTHDAY AS BIRTHDAY, MEMBER.ADDRESS1 AS ADDRESS1, MEMBER.MEMBER_DIVISION AS MEM_TYPE,
+					PET_MEMBER.PET_MEM_NO AS PET_MEM
+				FROM
+					(
+					SELECT
+						MEM_NO, MEM_ID, NAME, PHONE, EMAIL, SEX, BIRTHDAY, ADDRESS1, MEMBER_DIVISION
+					FROM
+						MEMBER
+					)
+				MEMBER, PET_MEMBER
+			WHERE 
+				MEMBER.MEM_ID = PET_MEMBER.ID(+)
+				)
+
+			UNION ALL
+
+			SELECT
+				NO, ID, NAME, PHONE, EMAIL, SEX, BIRTHDAY, ADDRESS1, MEM_TYPE, PET_MEM
+			FROM
+				(
+				SELECT
+					PETSITTER.PSMEM_NO AS NO, PETSITTER.PSMEM_ID AS ID, PETSITTER.NAME AS NAME, PETSITTER.PHONE AS PHONE, PETSITTER.EMAIL AS EMAIL,
+					PETSITTER.SEX AS SEX, PETSITTER.BIRTHDAY AS BIRTHDAY, PETSITTER.ADDRESS1 AS ADDRESS1, PETSITTER.MEMBER_DIVISION AS MEM_TYPE,
+					PET_MEMBER.PET_MEM_NO AS PET_MEM
+				FROM
+					(
+					SELECT
+						PSMEM_NO, PSMEM_ID, NAME, PHONE, EMAIL, SEX, BIRTHDAY, ADDRESS1, MEMBER_DIVISION
+					FROM
+						PETSITTER
+					)
+				PETSITTER, PET_MEMBER
+			WHERE 
+				PETSITTER.PSMEM_ID = PET_MEMBER.ID(+)
+			))
+		WHERE
+		<choose>
+			<when test = "NAME != NULL">
+				NAME LIKE '%'||#{NAME}||'%'
+		    </when>
+		    <when test = "ID != NULL">
+		   		ID LIKE '%'||#{ID}||'%' 
+		    </when>
+		    <when test = "MEM_TYPE != NULL">
+		   		MEM_TYPE LIKE '%'||#{MEM_TYPE}||'%' 
+		    </when>
+		</choose>
+		GROUP BY NO
+		ORDER BY NO DESC
+	</select>		
+
+	<!-- 회원 상세보기 --> <!-- 일반 회원 정보, 펫시터 회원 정보, 펫시터 추가 정보 -->
+	<!-- 상세보기 시 MEMBER_DIVISION의 값(일반 회원, 펫시터)에 따라 펫시터 추가 정보 VIEW가 보이거나(펫시터) 
+		안 보이거나(일반 회원) 해야 함. -->
+	<select id="adminMemDetail" parameterType="hashmap" resultType="hashmap">
+		<![CDATA[
+			SELECT
+				NO, ID, NAME, PHONE, EMAIL, SEX, BIRTHDAY, ZIPCODE, ADDRESS1,
+				ADDRESS2, ADDRESS_ADD, USE_TIME, JOIN_DATE, MEM_TYPE,
+				JOB, LI_CHECK, LI_NAME, LI_FILE, LI_FILE_SIZE, SCHOOL, ZIP, ADD1,
+				ADD2, ADD_ADD, CAREER, INTRODUCE, PS_CLASS
+			FROM
+				(
+				SELECT
+					MEM_NO AS NO, MEM_ID AS ID, NAME, PHONE, EMAIL, SEX,
+					BIRTHDAY, ZIPCODE, ADDRESS1, ADDRESS2, ADDRESS_ADD,
+					USE_TIME, JOIN_DATE, MEMBER_DIVISION AS MEM_TYPE,
+					NULL AS JOB, NULL AS LI_CHECK, NULL AS LI_NAME,
+					NULL AS LI_FILE, NULL AS LI_FILE_SIZE, NULL AS SCHOOL,
+					NULL AS ZIP, NULL AS ADD1, NULL AS ADD2, NULL AS ADD_ADD,
+					NULL AS CAREER, NULL AS INTRODUCE, NULL AS PS_CLASS
+				FROM
+					MEMBER	
+
+				UNION ALL
+
+				SELECT
+					NO, ID, NAME, PHONE, EMAIL, SEX, BIRTHDAY, ZIPCODE, ADDRESS1,
+					ADDRESS2, ADDRESS_ADD, USE_TIME, JOIN_DATE, MEM_TYPE,
+					JOB, LI_CHECK, LI_NAME, LI_FILE, LI_FILE_SIZE, SCHOOL, ZIP, ADD1,
+					ADD2, ADD_ADD, CAREER, INTRODUCE, PS_CLASS
+				FROM
+					(
+					SELECT 
+						PETSITTER.PSMEM_NO AS NO, PETSITTER.PSMEM_ID AS ID,
+						PETSITTER.NAME AS NAME, PETSITTER.PHONE AS PHONE,
+						PETSITTER.EMAIL AS EMAIL, PETSITTER.SEX AS SEX,
+						PETSITTER.BIRTHDAY AS BIRTHDAY, PETSITTER.ZIPCODE AS ZIPCODE,
+						PETSITTER.ADDRESS1 AS ADDRESS1, PETSITTER.ADDRESS2 AS ADDRESS2,
+						PETSITTER.ADDRESS_ADD AS ADDRESS_ADD, PETSITTER.USE_TIME AS USE_TIME,
+						PETSITTER.JOIN_DATE AS JOIN_DATE, PETSITTER.MEMBER_DIVISION AS MEM_TYPE,
+						PETSITTER_ADD.PSMEM_JOB AS JOB, PETSITTER_ADD.PSMEM_LICENSE_CHECK AS LI_CHECK,
+						PETSITTER_ADD.PSMEM_LICENSE_NAME AS LI_NAME,
+						PETSITTER_ADD.PSMEM_LICENSE_FILE AS LI_FILE, PETSITTER_ADD.PSMEM_LICENSE_FILE_SIZE AS LI_FILE_SIZE,
+						PETSITTER_ADD.PSMEM_SCHOOL_FINISH_CHECK AS SCHOOL, PETSITTER_ADD.PSMEM_CONSIGNMENT_ZIPCODE AS ZIP,
+						PETSITTER_ADD.PSMEM_CONSIGNMENT_ADDRESS1 AS ADD1, PETSITTER_ADD.PSMEM_CONSIGNMENT_ADDRESS2 AS ADD2,
+						PETSITTER_ADD.PSMEM_CONSIGNMENT_ADDRESS_ADD AS ADD_ADD, PETSITTER_ADD.PSMEM_CAREER AS CAREER,
+						PETSITTER_ADD.PSMEM_INTRODUCE AS INTRODUCE, PETSITTER_ADD.PSMEM_CLASS AS PS_CLASS
+					FROM
+						(
+						SELECT
+							PSMEM_NO, PSMEM_ID, NAME, PHONE, EMAIL, SEX, BIRTHDAY,
+							ZIPCODE, ADDRESS1, ADDRESS2, ADDRESS_ADD, USE_TIME, JOIN_DATE, MEMBER_DIVISION
+						FROM
+							PETSITTER
+						)
+						PETSITTER, PETSITTER_ADD
+					WHERE
+						PETSITTER.PSMEM_ID = PETSITTER_ADD.PSMEM_ID(+)
+				))
+			WHERE
+				ID = #{ID}
+		]]>
+	</select>
+
+	<!-- 회원 강제 탈퇴(삭제) -->
+	<delete id="adminMemDel" parameterType="hashmap"> 
+		<![CDATA[
+			DELETE
+			FROM
+			<choose>
+				<when test = "MEMBER_DIVISION == '일반 회원'">
+					MEMBER
+				WHERE
+					MEM_ID = #{ID}
+				</when>
+				<when test = "MEMBER_DIVISION == '펫시터'">
+					PETSITTER
+				WHERE
+					PSMEM_ID = #{ID}
+				</when>
+			</choose>
+		]]>
+	</delete>
+	
+	<!--  공지사항 리스트 보기 -->
+	<select id="selectNoticeList" parameterType="hashmap" resultType="hashmap">
+		<![CDATA[
+			SELECT
+				ROW_NUMBER() OVER (ORDER BY RNUM DESC) ROW_NUM,
+				RNUM,
+				BOARD_NO,
+				NOTICE_SUBJECT,
+				ADMIN_ID,
+				NOTICE_WRITER,
+				NOTICE_CONTENT,
+				TO_CHAR(NOTICE_DATE, 'YYYY/MM/DD') AS NOTICE_DATE,
+				NOTICE_COUNT
+			FROM
+				(SELECT
+					ROW_NUMBER() OVER (ORDER BY BOARD_NO DESC) RNUM,
+					BOARD_NO,
+					NOTICE_SUBJECT,
+					ADMIN_ID,
+					NOTICE_WRITER,
+					NOTICE_CONTENT,
+					NOTICE_DATE,
+					NOTICE_COUNT
+				FROM
+					NOTICE
+				) 
+			ORDER BY ROW_NUM DESC
+		]]>	
+	</select>
+	
+	<!--  공지사항 상세보기  -->
+	<select id="selectNoticeDetail" resultType="hashmap" parameterType="hashmap">
+		 <![CDATA[ 
+			SELECT
+				BOARD_NO,
+				NOTICE_SUBJECT,
+				ADMIN_ID,
+				NOTICE_WRITER,
+				NOTICE_CONTENT,
+				NOTICE_DATE,
+				NOTICE_COUNT
+			FROM
+				NOTICE
+			WHERE
+				BOARD_NO = #{BOARD_NO}
+		]]> 
+	</select>
+	
+	<!-- 파일 리스트 -->
+ 	<select id="selectNoticeFileList" parameterType="hashmap" resultType="hashmap">
+		<![CDATA[
+			SELECT
+			     BOARD_FILE_NO,
+			     BOARD_ORIGINAL_FILE_NAME,
+			     ROUND(BOARD_FILE_SIZE/1024,1) AS BOARD_FILE_SIZE
+			FROM
+			     BOARD_FILE
+			WHERE
+			     BOARD_NO = #{BOARD_NO} AND FILE_DEL = 'N'
+		]]>
+	</select>
+	
+	<!-- 공지사항 검색 -->
+	<select id="adminNoticeSearch" resultType="hashmap" parameterType="hashmap">
+		SELECT * FROM NOTICE
+		WHERE
+		<choose>
+			<when test = "NOTICE_SUBJECT != NULL">
+				NOTICE_SUBJECT LIKE '%'||#{NOTICE_SUBJECT}||'%'
+			</when>
+			<when test = "NOTICE_WRITER != NULL">
+				NOTICE_WRITER LIKE '%'||#{NOTICE_WRITER}||'%'
+			</when>
+			<when test = "NOTICE_CONTENT != NULL">
+		    	NOTICE_CONTENT LIKE '%'||#{NOTICE_CONTENT}||'%' 
+			</when>
+		</choose>
+		ORDER BY BOARD_NO DESC
+	</select>
+	
+	<!-- QNA 리스트 -->
+	<select id="selectQnaList" parameterType="hashmap" resultType="hashmap">
+		<![CDATA[
+			SELECT
+				ID,
+				BOARD_TYPE,
+				ROW_NUMBER() OVER(ORDER BY BOARD_NO) NUM,
+				BOARD_NO,
+				RNUM,
+				RE_RNUM,
+				QNA_SUBJECT,
+				QNA_WRITER,
+				QNA_CONTENT,
+				TO_CHAR(QNA_DATE, 'YYYY/MM/DD') AS QNA_DATE,
+				QNA_COUNT,
+				QNA_HEADER,
+				QNA_PRIVATE_CHECK,	
+				RANK() OVER (ORDER BY RNUM DESC) ROW_NUM,
+				ROW_NUMBER() OVER (ORDER BY RE_RNUM DESC) RE_ROW_NUM,
+				QNA_RE_STEP
+			FROM	
+				(SELECT		
+					ID,
+					BOARD_TYPE,
+					BOARD_NO,
+					QNA_SUBJECT,
+					QNA_WRITER,
+					QNA_CONTENT,
+					QNA_DATE,
+					QNA_COUNT,
+					QNA_HEADER,
+					QNA_PRIVATE_CHECK,
+					RANK() OVER (ORDER BY QNA_RE_NO DESC) RNUM,
+					QNA_RE_NO,
+					ROW_NUMBER() OVER (ORDER BY QNA_RE_STEP DESC) RE_RNUM,
+					QNA_RE_STEP
+				FROM
+					QNA 
+				) 
+			ORDER BY ROW_NUM DESC, RE_ROW_NUM ASC
+		]]>
+	</select>
+	
+	<select id="countQnaList" resultType="Integer">
+		<![CDATA[
+			SELECT
+				COUNT(*)
+			FROM
+				QNA
+		]]>
+	</select>
+	
+	<!-- QNA 파일 리스트 -->
+	<select id="selectQnaFileList" parameterType="hashmap" resultType="hashmap">
+	     <![CDATA[
+	        SELECT
+	        	BOARD_TYPE,
+	            BOARD_FILE_NO,
+	            BOARD_ORIGINAL_FILE_NAME,
+	            ROUND(BOARD_FILE_SIZE/1024,1) AS BOARD_FILE_SIZE,
+	            BOARD_STORED_FILE_NAME
+	        FROM
+	            BOARD_FILE
+	        WHERE
+	            BOARD_TYPE = 'QNA' AND BOARD_NO = #{BOARD_NO} AND FILE_DEL = 'N'
+	      ]]>
+   	</select>
+   	
+   	<!-- QNA 검색 (제목,작성자,내용) -->
+	<select id="adminQnaSearch" resultType="hashmap" parameterType="hashmap">
+			SELECT
+				ID,
+				BOARD_TYPE,
+				ROW_NUMBER() OVER(ORDER BY BOARD_NO) NUM,
+				BOARD_NO,
+				RNUM,
+				RE_RNUM,
+				QNA_SUBJECT,
+				QNA_WRITER,
+				QNA_CONTENT,
+				TO_CHAR(QNA_DATE, 'YYYY/MM/DD') AS QNA_DATE,
+				QNA_COUNT,
+				QNA_HEADER,
+				QNA_PRIVATE_CHECK,	
+				RANK() OVER (ORDER BY RNUM DESC) ROW_NUM,
+				ROW_NUMBER() OVER (ORDER BY RE_RNUM DESC) RE_ROW_NUM,
+				QNA_RE_STEP
+			FROM	
+				(SELECT		
+					ID,
+					BOARD_TYPE,
+					BOARD_NO,
+					QNA_SUBJECT,
+					QNA_WRITER,
+					QNA_CONTENT,
+					QNA_DATE,
+					QNA_COUNT,
+					QNA_HEADER,
+					QNA_PRIVATE_CHECK,
+					RANK() OVER (ORDER BY QNA_RE_NO DESC) RNUM,
+					QNA_RE_NO,
+					ROW_NUMBER() OVER (ORDER BY QNA_RE_STEP DESC) RE_RNUM,
+					QNA_RE_STEP
+				FROM
+					QNA 
+				)
+			WHERE
+				<choose>
+					<when test = "QNA_SUBJECT != NULL">
+						QNA_SUBJECT LIKE '%'||#{QNA_SUBJECT}||'%'
+				    </when>
+				    <when test = "QNA_WRITER != NULL">
+						QNA_WRITER LIKE '%'||#{QNA_WRITER}||'%'
+				    </when>
+				    <when test = "QNA_CONTENT != NULL">
+				   		QNA_CONTENT LIKE '%'||#{QNA_CONTENT}||'%' 
+				    </when>
+				</choose>
+			ORDER BY ROW_NUM DESC, RE_ROW_NUM ASC
+	</select>
+	
+	<!-- QNA 상세보기 -->
+	<select id="selectQnaDetail" parameterType="hashmap" resultType="hashmap">
+		<![CDATA[
+			SELECT * 
+			FROM
+				QNA
+			WHERE 
+				BOARD_NO = #{BOARD_NO}
+		]]>
+	</select>
+	
+	<!-- REPORT 리스트 -->
+	<select id="selectReportList" parameterType="hashmap" resultType="hashmap">
+		<![CDATA[
+			SELECT
+				ID,
+				ROW_NUMBER() OVER(ORDER BY BOARD_NO) NUM,
+				BOARD_NO,
+				RNUM,
+				RE_RNUM,
+				REPORT_SUBJECT,
+				REPORT_WRITER,
+				REPORT_CONTENT,
+				TO_CHAR(REPORT_DATE, 'YYYY/MM/DD') AS REPORT_DATE,
+				REPORT_COUNT,
+				REPORT_HEADER,
+				REPORT_PRIVATE_CHECK,	
+				RANK() OVER (ORDER BY RNUM DESC) ROW_NUM,
+				ROW_NUMBER() OVER (ORDER BY RE_RNUM DESC) RE_ROW_NUM,
+				REPORT_RE_STEP
+			FROM	
+				(SELECT		
+					ID,
+					BOARD_NO,
+					REPORT_SUBJECT,
+					REPORT_WRITER,
+					REPORT_CONTENT,
+					REPORT_DATE,
+					REPORT_COUNT,
+					REPORT_HEADER,
+					REPORT_PRIVATE_CHECK,
+					RANK() OVER (ORDER BY REPORT_RE_NO DESC) RNUM,
+					REPORT_RE_NO,
+					ROW_NUMBER() OVER (ORDER BY REPORT_RE_STEP DESC) RE_RNUM,
+					REPORT_RE_STEP
+				FROM
+					REPORT 
+				) ORDER BY ROW_NUM DESC, RE_ROW_NUM ASC
+		]]>
+	</select>
+	
+	<select id="countReportList" resultType="Integer">
+		<![CDATA[
+			SELECT
+				COUNT(*)
+			FROM
+				REPORT				
+		]]>
+	</select>
+	
+		<!-- REPORT 상세보기 -->
+	<select id="selectReportDetail" parameterType="hashmap" resultType="hashmap">
+		<![CDATA[
+				SELECT * 
+				FROM
+					REPORT
+				WHERE 
+					BOARD_NO = #{BOARD_NO}
+		]]>
+	</select>
+	
+		<!-- REPORT 파일 리스트 -->
+	<select id="selectReportFileList" parameterType="hashmap" resultType="hashmap">
+	     <![CDATA[
+	        SELECT
+	            BOARD_FILE_NO,
+	            BOARD_ORIGINAL_FILE_NAME,
+	            ROUND(BOARD_FILE_SIZE/1024,1) AS BOARD_FILE_SIZE,
+	            BOARD_STORED_FILE_NAME
+	        FROM
+	            BOARD_FILE
+	        WHERE
+	            BOARD_TYPE = 'REPORT' AND BOARD_NO = #{BOARD_NO} AND FILE_DEL = 'N'
+	      ]]>
+   	</select>
+   	
+   		<!-- REPORT 검색 (제목,작성자,내용) -->
+	<select id="adminReportSearch" resultType="hashmap" parameterType="hashmap">
+			SELECT *
+			FROM
+				REPORT
+			WHERE
+				<choose>
+					<when test = "REPORT_SUBJECT != NULL">
+						REPORT_SUBJECT LIKE '%'||#{REPORT_SUBJECT}||'%'
+				    </when>
+				    <when test = "REPORT_WRITER != NULL">
+						REPORT_WRITER LIKE '%'||#{REPORT_WRITER}||'%'
+				    </when>
+				    <when test = "REPORT_CONTENT != NULL">
+				   		REPORT_CONTENT LIKE '%'||#{REPORT_CONTENT}||'%' 
+				    </when>
+				</choose>
+			ORDER BY BOARD_NO DESC
+	</select>
+	
+		<!-- MYPET 리스트 보기 -->
+	<select id="selectMypetList" parameterType="hashmap" resultType="hashmap">
+		<![CDATA[
+			SELECT
+				BOARD_TYPE,
+				ROW_NUMBER() OVER(ORDER BY BOARD_NO) NUM,
+				BOARD_NO,
+				MYPET_SUBJECT,
+				ID,
+				MYPET_WRITER,
+				MYPET_CONTENT,
+				MAIN_IMG,
+				MYPET_DATE,
+				MYPET_COUNT
+			FROM
+				MYPET
+			ORDER BY BOARD_NO DESC
+		]]>
+	</select>
+	
+		<!-- 글 상세보기 -->
+	<select id="selectMypetDetail" parameterType="hashmap" resultType="hashmap">
+		<![CDATA[
+				SELECT
+					BOARD_TYPE,
+					BOARD_NO,
+					MYPET_SUBJECT,
+					ID,
+					MYPET_WRITER,
+					MYPET_CONTENT,
+					MYPET_DATE,
+					MYPET_COUNT
+				FROM
+					MYPET
+				WHERE 
+					BOARD_NO = #{BOARD_NO}
+		]]>
+	</select>
+	
+		<!-- 파일 리스트 -->
+	<select id="selectMypetFileList" parameterType="hashmap" resultType="hashmap">
+		<![CDATA[
+	         SELECT
+	         	  BOARD_TYPE,
+	              BOARD_FILE_NO,
+	              BOARD_ORIGINAL_FILE_NAME,
+	              ROUND(BOARD_FILE_SIZE/1024,1) AS BOARD_FILE_SIZE,
+	              BOARD_STORED_FILE_NAME
+	              
+	         FROM
+	              BOARD_FILE
+	         WHERE
+	              BOARD_TYPE = 'MYPET' AND BOARD_NO = #{BOARD_NO} AND FILE_DEL = 'N'
+	    ]]>
+	</select>
+	
+		<!-- MYPET 댓글 리스트 -->
+	<select id="selectCmtList" parameterType="hashmap" resultType="hashmap">
+		<![CDATA[
+			SELECT
+				MYPET_COMMENT_NO,
+				MYPET_COMMENT_CONTENT,
+				ID,
+				MYPET_COMMENT_WRITER,
+				MYPET_COMMENT_DATE
+			FROM
+				MYPET_COMMENT
+			WHERE
+				BOARD_NO = #{BOARD_NO}
+				ORDER BY MYPET_COMMENT_NO ASC
+		]]>
+	</select>
+		
+		<!-- 마이펫 검색 -->
+	<select id="adminMypetSearch" resultType="hashmap" parameterType="hashmap">
+		SELECT * FROM MYPET
+		WHERE
+		<choose>
+		        <when test = "MYPET_SUBJECT != NULL">
+			MYPET_SUBJECT LIKE '%'||#{MYPET_SUBJECT}||'%'
+		        </when>
+		        <when test = "MYPET_WRITER != NULL">
+			MYPET_WRITER LIKE '%'||#{MYPET_WRITER}||'%'
+		        </when>
+		        <when test = "MYPET_CONTENT != NULL">
+		    MYPET_CONTENT LIKE '%'||#{MYPET_CONTENT}||'%' 
+		        </when>
+		</choose>
+		ORDER BY BOARD_NO DESC
+	</select>
+	
+	<!-- 매칭 내역 -->
+	<select id="adminMatchList" parameterType="hashmap" resultType="hashmap">
+		<![CDATA[
+			SELECT
+				ROW_NUMBER() OVER(ORDER BY PROGRESS_NO) NUM, PROGRESS_NO,
+				MATCH_REGISTER_NO, PSMEM_ID, P_CLASS, P_NAME,
+				P_SEX, P_JOB, P_MOBILE, P_EMAIL, P_ADD1, P_ADD2,
+				P_ADD_ADD, P_SERVICE, P_CERTI, P_SCHOOL,
+				MEM_ID, M_NAME, M_SEX, M_MOBILE, M_EMAIL,
+				M_ADD1, M_ADD2, M_ADD_ADD, PET_ID,
+				PRICE, PRICE_S_A, PRICE_S_H, PRICE_M_A,
+				PRICE_M_H, PRICE_L_A, PRICE_L_H,
+				PETSITTING_DAYS, CHECK_IN, CHECK_OUT,
+				PROGRESS_STEPS, PAYMENT_DAY, PROGRESS_END_DAY,
+				DEL_NAME, DEL_GB,RESERVE_DATE
+			FROM 
+				PETSITTING_REGISTER
+			ORDER BY PROGRESS_NO DESC
+		]]>
+	</select>
+	
+	<!-- 매칭 검색 -->
+	<select id="adminMatchSearch" resultType="hashmap" parameterType="hashmap">
+		SELECT
+			ROW_NUMBER() OVER(ORDER BY PROGRESS_NO) NUM, PROGRESS_NO,
+			MATCH_REGISTER_NO, PSMEM_ID, P_CLASS, P_NAME,
+			P_SEX, P_JOB, P_MOBILE, P_EMAIL, P_ADD1, P_ADD2,
+			P_ADD_ADD, P_SERVICE, P_CERTI, P_SCHOOL,
+			MEM_ID, M_NAME, M_SEX, M_MOBILE, M_EMAIL,
+			M_ADD1, M_ADD2, M_ADD_ADD, PET_ID,
+			PRICE, PRICE_S_A, PRICE_S_H, PRICE_M_A,
+			PRICE_M_H, PRICE_L_A, PRICE_L_H,
+			PETSITTING_DAYS, CHECK_IN, CHECK_OUT,
+			PROGRESS_STEPS, PAYMENT_DAY, PROGRESS_END_DAY,
+			DEL_NAME, DEL_GB,RESERVE_DATE
+		FROM
+			PETSITTING_REGISTER
+		WHERE
+		<choose>
+			<when test = "P_NAME != NULL">
+				P_NAME LIKE '%'||#{P_NAME}||'%'
+			</when>
+			<when test = "M_NAME != NULL">
+				M_NAME LIKE '%'||#{M_NAME}||'%'
+			</when>
+			<when test = "PROGRESS_STEPS != NULL">
+				PROGRESS_STEPS LIKE '%'||#{PROGRESS_STEPS}||'%'
+			</when>
+			<when test = "DEL_GB != NULL">
+				DEL_GB LIKE '%'||#{DEL_GB}||'%'
+			</when>
+		</choose>
+			ORDER BY PROGRESS_NO DESC
+	</select>
+	
+	
+	<select id="adminCash" resultType="hashmap" parameterType="hashmap">
+		<![CDATA[
+			SELECT
+				ROW_NUMBER() OVER(ORDER BY PROGRESS_NO) NUM, PROGRESS_NO, PSMEM_ID, MEM_ID, P_NAME, DEL_GB, DEL_NAME, CASH_CARE_NO,
+				PRICE, CASH_CARE_SELECT, CASH_CARE_CHECK, CASH_CARE_DATE, WITHDRAW_DATE,
+				RESERVE_DATE
+			FROM
+				(
+				SELECT
+					PETSITTING_REGISTER.PROGRESS_NO AS PROGRESS_NO,
+					PETSITTING_REGISTER.P_NAME AS P_NAME,
+					PETSITTING_REGISTER.DEL_NAME AS DEL_NAME,
+					PETSITTING_REGISTER.DEL_GB AS DEL_GB,
+					PETSITTING_REGISTER.RESERVE_DATE AS RESERVE_DATE,
+					CASH_CARE.CASH_CARE_NO AS CASH_CARE_NO,
+					CASH_CARE.MEM_ID AS MEM_ID,
+					CASH_CARE.PSMEM_ID AS PSMEM_ID,
+					CASH_CARE.CASH_CARE_SELECT AS CASH_CARE_SELECT,
+					CASH_CARE.CASH_CARE_CHECK AS CASH_CARE_CHECK,
+					CASH_CARE.PRICE AS PRICE,
+					CASH_CARE.CASH_CARE_DATE AS CASH_CARE_DATE,
+					CASH_CARE.WITHDRAW_DATE AS WITHDRAW_DATE
+				FROM
+					PETSITTING_REGISTER, CASH_CARE
+				WHERE
+					PETSITTING_REGISTER.PROGRESS_NO = CASH_CARE.PROGRESS_NO
+				)
+			ORDER BY NUM DESC
+		]]>
+	</select>
+	
+	<!-- 입출금 검색 -->
+	<select id="adminCashSearch" resultType="hashmap" parameterType="hashmap">
+		SELECT
+			ROW_NUMBER() OVER(ORDER BY PROGRESS_NO) NUM, PROGRESS_NO, PSMEM_ID, MEM_ID, P_NAME, DEL_GB, DEL_NAME, CASH_CARE_NO,
+			PRICE, CASH_CARE_SELECT, CASH_CARE_CHECK, CASH_CARE_DATE, WITHDRAW_DATE,
+			RESERVE_DATE
+		FROM
+			(
+			SELECT
+				PETSITTING_REGISTER.PROGRESS_NO AS PROGRESS_NO,
+				PETSITTING_REGISTER.P_NAME AS P_NAME,
+				PETSITTING_REGISTER.DEL_NAME AS DEL_NAME,
+				PETSITTING_REGISTER.DEL_GB AS DEL_GB,
+				PETSITTING_REGISTER.RESERVE_DATE AS RESERVE_DATE,
+				CASH_CARE.CASH_CARE_NO AS CASH_CARE_NO,
+				CASH_CARE.MEM_ID AS MEM_ID,
+				CASH_CARE.PSMEM_ID AS PSMEM_ID,
+				CASH_CARE.CASH_CARE_SELECT AS CASH_CARE_SELECT,
+				CASH_CARE.CASH_CARE_CHECK AS CASH_CARE_CHECK,
+				CASH_CARE.PRICE AS PRICE,
+				CASH_CARE.CASH_CARE_DATE AS CASH_CARE_DATE,
+				CASH_CARE.WITHDRAW_DATE AS WITHDRAW_DATE
+			FROM
+				PETSITTING_REGISTER, CASH_CARE
+			WHERE
+				PETSITTING_REGISTER.PROGRESS_NO = CASH_CARE.PROGRESS_NO
+			)
+		WHERE
+			<choose>
+				<when test = "P_NAME != NULL">
+					P_NAME LIKE '%'||#{P_NAME}||'%'
+				</when>
+				<when test = "CASH_CARE_SELECT != NULL">
+					CASH_CARE_SELECT LIKE '%'||#{CASH_CARE_SELECT}||'%'
+				</when>
+				<when test = "CASH_CARE_CHECK != NULL">
+					CASH_CARE_CHECK LIKE '%'||#{CASH_CARE_CHECK}||'%'
+				</when>
+			</choose>
+		ORDER BY NUM DESC
+	</select>
+	
+	<!-- 출금 승인 -->
+	<select id="adminCashWithdraw" parameterType="hashmap" resultType="hashmap">
+		<![CDATA[
+			UPDATE
+				CASH_CARE
+			SET	
+				CASH_CARE_SELECT = '출금 완료',
+				CASH_CARE_CHECK = 'Y'
+			WHERE
+				CASH_CARE_NO = #{cn}
+		]]>
+	</select>
+
+</mapper>

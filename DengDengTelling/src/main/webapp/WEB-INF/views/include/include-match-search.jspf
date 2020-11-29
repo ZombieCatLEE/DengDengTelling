@@ -1,0 +1,150 @@
+<%@ page pageEncoding="utf-8"%>
+<!-- 
+2020.02.13 호석 
+-->
+<script src="https://ssl.daumcdn.net/dmaps/map_js_init/postcode.v2.js"></script>
+<script src="https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+
+<script type="text/javascript">
+	function searchResult() {
+		var form = document.searchBar;
+		
+		if(form.ADDRESS1.value == null || form.ADDRESS1.value == '') {
+			alert("주소는 필수 입력 사항입니다.")
+			form.ADDRESS1.focus();
+			return false;
+		}
+		form.action = "/matchSearchClick";
+		form.submit();
+	}
+</script>
+
+<!-- 검색부분 시작 -->
+<form id="searchBar" name="searchBar">
+<div class="tm-main-content" id="top">
+	<div style="position: relative; margin-top: 2em; text-align: center;">
+		<div style="display: block; width: auto; height: 40px; margin-top: 50px; position: relative; text-align: cetner;">
+			<div style="display: inline-block; position: relative; width: 600px;">
+				<span style="font-weight: bold; font-size: 2em; position: relative;">어디에 사시나요?</span>
+			</div>
+			<div style="display: inline-block; position: relative; width: 600px;">
+				<span style="font-weight: bold; font-size: 2em; position: relative;">언제 맡기시나요?</span>
+			</div>
+		</div>
+	</div>
+
+	<div style="position: relative; margin-top: 10px; text-align: center;">
+			<div style="display: block; width: auto; height: 80px; position: relative; text-align: cetner;">
+				<div style="display: inline-block; position: relative; width: 600px;">
+					<input name="ADDRESS1" ID="ADDRESS1" type="text" style="width: 500px; font-size: 16px;" onclick="openZipSearch()" placeholder="    클릭해서 거주 지역을 선택해주세요.">
+					<input type="hidden" name="ZIPCODE" id="ZIPCODE"/>
+					<input type="hidden" name="ADDRESS2" id="ADDRESS2" />
+                    <input type="hidden" name="ADDRESS_ADD" id="ADDRESS_ADD"/>
+				</div>
+				<div style="display: inline-block; position: relative; width: 600px;">
+					<input name="basicDate" type="text" class="flatpickr-input" id="basicDate" style="width: 500px; font-size: 16px;" placeholder="    클릭해서 예약 날짜를 선택해주세요.">
+				</div>
+			</div>
+
+			<div style="position: relative; width: auto; height: 100px; margin-bottom: 50px;">
+				<p style="font-size: 2em; font-weight: 600; color: #393C47; margin-top: 30px; margin-bottom: 20px; position: relative;">
+					원하시는 조건을 선택하세요.</p>
+				<div style="position: relative; text-align: left; vertical-align: middle;">
+					<table style="border-spacing: 60px 15px; margin: auto; border: 1px solid #D8D8D8; border-radius: 30px;">
+						<tr>
+							<td style="margin: auto; height: 30px;"><input type="checkbox" id="serviceChk1" class="serviceChk" name="serviceChk" value="service01"/><label for="serviceChk1">반려동물 없음</label></td>
+							<td style="margin: auto; height: 30px;"><input type="checkbox" id="serviceChk2" class="serviceChk" name="serviceChk" value="service02"/><label for="serviceChk2">픽업</label></td>
+							<td style="margin: auto; height: 30px;"><input type="checkbox" id="serviceChk3" class="serviceChk" name="serviceChk" value="service03"/><label for="serviceChk3">대형견</label></td>
+							<td style="margin: auto; height: 30px;"><input type="checkbox" id="serviceChk4" class="serviceChk" name="serviceChk" value="service04"/><label for="serviceChk4">마당 있음</label></td>
+							<td style="margin: auto; height: 30px;"><input type="checkbox" id="serviceChk5" class="serviceChk" name="serviceChk" value="service05"/><label for="serviceChk5">노견 케어</label></td>
+							<td style="margin: auto; height: 30px;"><input type="checkbox" id="serviceChk6" class="serviceChk" name="serviceChk" value="service06"/><label for="serviceChk6">장기 예약</label></td>
+							<td style="margin: auto; height: 30px;"><input type="checkbox" id="serviceChk7" class="serviceChk" name="serviceChk" value="service07"/><label for="serviceChk7">실내 놀이</label></td>
+							<td style="margin: auto; height: 30px;"><input type="checkbox" id="serviceChk8" class="serviceChk" name="serviceChk" value="service08"/><label for="serviceChk8">매일 산책</label></td>
+							<td style="margin: auto; height: 30px;"><input type="checkbox" id="serviceChk9" class="serviceChk" name="serviceChk" value="service09"/><label for="serviceChk9">목욕 가능</label></td>
+						</tr>
+						<tr>
+							<td style="margin: auto; height: 30px;"><input type="checkbox" id="serviceChk10" class="serviceChk" name="serviceChk" value="service10"/><label for="serviceChk10">약물 경구 복용</label></td>
+							<td style="margin: auto; height: 30px;"><input type="checkbox" id="serviceChk11" class="serviceChk" name="serviceChk" value="service11"/><label for="serviceChk11">강아지 케어</label></td>
+							<td style="margin: auto; height: 30px;"><input type="checkbox" id="serviceChk12" class="serviceChk" name="serviceChk" value="service12"/><label for="serviceChk12">아파트</label></td>
+							<td style="margin: auto; height: 30px;"><input type="checkbox" id="serviceChk13" class="serviceChk" name="serviceChk" value="service13"/><label for="serviceChk13">빌라</label></td>
+							<td style="margin: auto; height: 30px;"><input type="checkbox" id="serviceChk14" class="serviceChk" name="serviceChk" value="service14"/><label for="serviceChk14">단독 주택</label></td>
+							<td style="margin: auto; height: 30px;"><input type="checkbox" id="serviceChk15" class="serviceChk" name="serviceChk" value="service15"/><label for="serviceChk15">싱글</label></td>
+							<td style="margin: auto; height: 30px;"><input type="checkbox" id="serviceChk16" class="serviceChk" name="serviceChk" value="service16"/><label for="serviceChk16">아이 없음</label></td>
+							<td style="margin: auto; height: 30px;"><input type="checkbox" id="serviceChk17" class="serviceChk" name="serviceChk" value="service17"/><label for="serviceChk17">반려동물 등록 가능</label></td>
+						</tr>
+							<!-- 체크 박스와 관련된 jquery를 만들어서, 등록 버튼을 누르면 값을 가지고 넘어가도록 한다. -->
+					<!-- 서비스 체크 박스 끝 -->
+					</table>
+				</div>
+			</div>
+		</div>
+		<div style="display: flex; width: auto; height: 40px; margin-top: 100px; margin-bottom: 60px; position: relative; text-align: cetner;">
+			<div style="display: inline-block; position: relative; width: 800px; margin: auto; text-align: center;">
+				<button type="submit" style="background-color: #037fbb; border: none; color: #fff; padding: 12px 0; text-decoration: none; cursor: pointer; border-radius: 15px; 
+					font-size: 1.5em; width: 700px; height: 50px; margin: auto;" onclick="searchResult()">펫시터찾기</button>
+			</div>
+		</div>
+	</div>
+</form>
+<!-- flatpickr jQuery -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+<!-- Flatpickr -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.2.3/flatpickr.js"></script>
+<!-- flatpickr -->  
+<script id="INLINE_PEN_JS_ID">
+	$("#basicDate").flatpickr({  
+		mode: "multiple",	
+		dateFormat: "Y-m-d",
+		minDate: "today" 
+	});					 
+</script>
+
+<script type="text/javascript">
+//우편번호 검색
+function openZipSearch() {
+	new daum.Postcode({
+		oncomplete : function(data) {
+		     // 팝업에서 검색결과 항목을 클릭했을때 실행할 코드를 작성하는 부분.
+
+            // 각 주소의 노출 규칙에 따라 주소를 조합한다.
+            // 내려오는 변수가 값이 없는 경우엔 공백('')값을 가지므로, 이를 참고하여 분기 한다.
+            var addr = ''; // 주소 변수
+            var extraAddr = ''; // 참고항목 변수
+
+            //사용자가 선택한 주소 타입에 따라 해당 주소 값을 가져온다.
+            if (data.userSelectedType === 'R') { // 사용자가 도로명 주소를 선택했을 경우
+                addr = data.roadAddress;
+            } else { // 사용자가 지번 주소를 선택했을 경우(J)
+                addr = data.jibunAddress;
+            }
+
+            // 사용자가 선택한 주소가 도로명 타입일때 참고항목을 조합한다.
+            if(data.userSelectedType === 'R'){
+                // 법정동명이 있을 경우 추가한다. (법정리는 제외)
+                // 법정동의 경우 마지막 문자가 "동/로/가"로 끝난다.
+                if(data.bname !== '' && /[동|로|가]$/g.test(data.bname)){
+                    extraAddr += data.bname;
+                }
+                // 건물명이 있고, 공동주택일 경우 추가한다.
+                if(data.buildingName !== '' && data.apartment === 'Y'){
+                    extraAddr += (extraAddr !== '' ? ', ' + data.buildingName : data.buildingName);
+                }
+                // 표시할 참고항목이 있을 경우, 괄호까지 추가한 최종 문자열을 만든다.
+                if(extraAddr !== ''){
+                    extraAddr = ' (' + extraAddr + ')';
+                }
+                // 조합된 참고항목을 해당 필드에 넣는다.
+                document.getElementById("ADDRESS_ADD").value = extraAddr;
+            
+            } else {
+                document.getElementById("ADDRESS_ADD").value = '';
+            }
+			
+			 document.getElementById("ZIPCODE").value = data.zonecode;
+			 document.getElementById("ADDRESS1").value = addr;
+			 document.getElementById("ADDRESS2").focus();
+		}
+	}).open();
+}
+</script>
+<!-- 검색부분 끝 -->

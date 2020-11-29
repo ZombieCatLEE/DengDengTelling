@@ -1,0 +1,95 @@
+<%@ page pageEncoding="utf-8"%>
+<%-- <%
+//이 부분은 세션 값이 제대로 넘어오는 확인하는 부분이므로, 필요가 없다면 주석 처리를 해서 사용.
+String ADMIN_ID = (String)session.getAttribute("ADMIN_ID");
+String ADMIN_NAME = (String)session.getAttribute("ADMIN_NAME");
+
+System.out.println(ADMIN_ID);
+System.out.println(ADMIN_NAME);
+%> --%>
+<!--  사이트 로고 아이콘 -->
+<nav id="ttr_menu" class="navbar-default navbar">
+	<div id="ttr_menu_inner_in">
+		<div class="menuforeground"></div>
+		<div id="navigationmenu">
+			<div class="navbar-header">
+				<button id="nav-expander" data-target=".navbar-collapse"
+					data-toggle="collapse" class="navbar-toggle" type="button">
+					<span class="sr-only"> </span> <span class="icon-bar"> </span> <span
+						class="icon-bar"> </span> <span class="icon-bar"> </span>
+				</button>
+				<a href="/mainAdmin" target="_self"> <img class="ttr_menu_logo"
+					src="resources/images/Logo.png" style="width: 10em; height: 5em">
+				</a>
+			</div>
+			<!--  사이트 로고 아이콘 -->
+
+			<!-- 사이트 메뉴 -->
+			<c:choose> <%-- 세션에서 가져온 ID값이 있는지 없는지에 따라 메뉴바 구성 변경 --%>
+				<c:when test="${ADMIN_ID != null}"> <%-- ID 값이 있다면(로그인 상태) --%>
+					<div class="menu-center collapse navbar-collapse">
+						<ul class="ttr_menu_items nav navbar-nav navbar-right">
+							<li class="ttr_menu_items_parent dropdown"><a
+								href="/matchMain" class="ttr_menu_items_parent_link"> <span
+									class="menuchildicon">펫시터 매칭</span>
+							</a>
+								<hr class="horiz_separator" /></li>
+							<li class="ttr_menu_items_parent dropdown"><a
+								href="/comu" class="ttr_menu_items_parent_link"> <span
+									class="menuchildicon"></span> 커뮤니티
+							</a>
+								<hr class="horiz_separator" /></li>
+
+							<li class="ttr_menu_items_parent dropdown"><a
+								href="/adminMain" class="ttr_menu_items_parent_link"> <span
+									class="menuchildicon"></span> 관리자 메뉴
+							</a>
+								<hr class="horiz_separator" /></li>
+							<li>
+								<div
+									style="text-align: center; width: 30em; height: 3em; border: solid; margin-top: 0.2em; border-radius: 10px; border-color: #037FBB">
+									<span
+										style="margin-right: 0.5em; position: relative; top: 0.6em;">관리자
+									</span> <a href="/main" class=""> <!-- 마이페이지 링크 넣기 --> <span
+										style="font-weight: bold; position: relative; top: 0.6em; color: #ED7D32;">
+											${ADMIN_NAME} </span>
+									</a> <span style="position: relative; top: 0.6em;">님이 접속중입니다.
+										<hr class="horiz_separator" />
+									</span> <a href="/logout" class=""> <span
+										style="position: relative; top: 0.6em; margin-left: 1.5em; color: gray;">로그아웃
+									</span>
+									</a>
+								</div>
+							</li>
+						</ul>
+					</div>
+				</c:when>
+				<c:otherwise> <%-- ID값이 없다면(비로그인 상태) --%>
+					<div class="menu-center collapse navbar-collapse">
+						<ul class="ttr_menu_items nav navbar-nav navbar-right">
+							<li class="ttr_menu_items_parent dropdown"><a
+								href="/matchMain" class="ttr_menu_items_parent_link"><span
+									class="menuchildicon"></span>펫시터 매칭</a>
+								<hr class="horiz_separator" /></li>
+							<li class="ttr_menu_items_parent dropdown"><a
+								href="/comu" class="ttr_menu_items_parent_link"><span
+									class="menuchildicon"></span>커뮤니티</a>
+								<hr class="horiz_separator" /></li>
+							<li class="ttr_menu_items_parent dropdown"><a
+								href="/login" class="ttr_menu_items_parent_link"><span
+									class="menuchildicon"></span>로그인</a>
+								<hr class="horiz_separator" /></li>
+							<li class="ttr_menu_items_parent dropdown"><a
+								href="/joinPage" class="ttr_menu_items_parent_link"><span
+									class="menuchildicon"></span>회원가입</a>
+								<hr class="horiz_separator" /></li>
+						</ul>
+					</div>
+				</c:otherwise>
+			</c:choose>
+		</div>
+	</div>
+	<!-- 사이트 메뉴 -->
+</nav>
+
+<!-- 여기까지가 윗단  -->

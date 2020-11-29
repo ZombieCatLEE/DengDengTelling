@@ -1,0 +1,28 @@
+<%@ page pageEncoding="utf-8"%>
+
+<!-- item 3 -->
+
+<div align="center" style="">
+	<div style="margin-top: 10em; margin-bottom: 10em;">
+
+		<div>
+			<img src="resources/images/item3_img1.png"
+				style="width: 10em; height: 10em; position: relative; right: 3em"> <span
+				style="font-size: 2em; font-weight: 500; position: relative; left: 3em">실제
+				이용 고객님들의 솔직한 후기를 보고 결정해주세요!</span>
+		</div>
+
+		<div style="margin-top: 3em">
+			<img src="resources/images/item3_img2.PNG"
+				style="width: 10em; height: 10em; position: relative; left: 4em"> <span
+				style="font-size: 2em; font-weight: 500; position: relative; left: 6.5em">
+				회원님의 조건에 맞는 펫시터를 검색해서 최고의 서비스를 이용해보세요!  </span>
+		</div>
+
+	</div>
+
+
+</div>
+
+
+<!-- item 3 -->

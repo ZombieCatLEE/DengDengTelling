@@ -1,0 +1,802 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="matchSql">
+<!-- 
+2020.02.13 호석
+ -->
+	<!-- 매치 등록 폼 이동 버튼 --> <!-- 사실 이 쿼리는 그냥 각각의 테이블을 호출하는 쿼리문을 사용했어도 됐다. -->
+	<!-- <select id="matchInsertForm" parameterType="hashmap" resultType="hashmap">
+		<![CDATA[
+			SELECT
+				PSMEM_ID, NAME, PHONE, EMAIL, SEX, BIRTHDAY, ZIPCODE, ADDRESS1, ADDRESS2,
+				ADDRESS_ADD, USE_TIME, JOIN_DATE, DIVISION, JOB, LI_CHK, LI_NAME,
+				LI_FILE, LI_FILE_SIZE, SCHOOL, ADD_ZIP, ADD_ADD1, ADD_ADD2, ADD_ADD_ADD,
+				CAREER, INTRODUCE, GRADE, PET_MEM_ID, PET_NAME, PET_SEX, PET_KIND, PET_SIZE,
+				PET_AGE, PET_SEX_CHK, PROFILE_FILE
+			FROM
+				(
+				SELECT 
+					PETSITTER.PSMEM_ID AS PSMEM_ID, PETSITTER.NAME AS NAME, PETSITTER.PHONE AS PHONE,
+					PETSITTER.EMAIL AS EMAIL, PETSITTER.SEX AS SEX, PETSITTER.BIRTHDAY AS BIRTHDAY, PETSITTER.ZIPCODE AS ZIPCODE,
+					PETSITTER.ADDRESS1 AS ADDRESS1, PETSITTER.ADDRESS2 AS ADDRESS2, PETSITTER.ADDRESS_ADD AS ADDRESS_ADD, PETSITTER.USE_TIME AS USE_TIME,
+					PETSITTER.JOIN_DATE AS JOIN_DATE, PETSITTER.MEMBER_DIVISION AS DIVISION, PETSITTER_ADD.PSMEM_JOB AS JOB,
+					PETSITTER_ADD.PSMEM_LICENSE_CHECK AS LI_CHK, PETSITTER_ADD.PSMEM_LICENSE_NAME AS LI_NAME,
+					PETSITTER_ADD.PSMEM_LICENSE_FILE AS LI_FILE, PETSITTER_ADD.PSMEM_LICENSE_FILE_SIZE AS LI_FILE_SIZE,
+					PETSITTER_ADD.PSMEM_SCHOOL_FINISH_CHECK AS SCHOOL, PETSITTER_ADD.PSMEM_CONSIGNMENT_ZIPCODE AS ADD_ZIP,
+					PETSITTER_ADD.PSMEM_CONSIGNMENT_ADDRESS1 AS ADD_ADD1, PETSITTER_ADD.PSMEM_CONSIGNMENT_ADDRESS2 AS ADD_ADD2,
+					PETSITTER_ADD.PSMEM_CONSIGNMENT_ADDRESS_ADD AS ADD_ADD_ADD, PETSITTER_ADD.PSMEM_CAREER AS CAREER,
+					PETSITTER_ADD.PSMEM_INTRODUCE AS INTRODUCE, PETSITTER_ADD.PSMEM_CLASS AS GRADE,
+					PET_MEMBER.PET_MEM_ID AS PET_MEM_ID, PET_MEMBER.PET_MEM_NAME AS PET_NAME, PET_MEMBER.PET_MEM_SEX AS PET_SEX,
+					PET_MEMBER.PET_MEM_KIND AS PET_KIND, PET_MEMBER.PET_MEM_SIZE AS PET_SIZE, PET_MEMBER.PET_MEM_AGE AS PET_AGE,
+					PET_MEMBER.PET_MEM_SEX_CHECK AS PET_SEX_CHK, PROFILE_FILE.PROFILE_STORED_FILE_NAME AS PROFILE_FILE
+					FROM PETSITTER, PETSITTER_ADD, PET_MEMBER, PROFILE_FILE
+				WHERE PETSITTER.PSMEM_ID = PETSITTER_ADD.PSMEM_ID AND PETSITTER.PSMEM_ID = PET_MEMBER.ID AND PET_MEMBER.ID = PROFILE_FILE.PSMEM_ID
+				)
+			WHERE PSMEM_ID = #{ID}
+		]]>
+	</select> -->
+	
+	<!-- 여기부터 매치 관련 테이블 가져오는 각각의 쿼리 -->
+	<!-- 펫시터 정보 일괄 가져오기 --> <!-- 한 줄 -->
+	<select id="selectPetsitter" parameterType="hashmap" resultType="hashmap">
+		<![CDATA[
+			SELECT
+				*
+			FROM
+				PETSITTER
+			WHERE PSMEM_ID = #{ID}
+		]]>
+	</select>
+	
+	<!-- 펫시터 추가 정보 일괄 가져오기 --> <!-- 한 줄 -->
+	<select id="selectPetsitterAdd" parameterType="hashmap" resultType="hashmap">
+		<![CDATA[
+			SELECT
+				*
+			FROM
+				PETSITTER_ADD
+			WHERE PSMEM_ID = #{ID}
+		]]>
+	</select>
+	
+	<!-- 펫시터 프로필 사진 가져오기 한줄 -->
+	<select id="selectPetsitterProfile" parameterType="hashmap" resultType="hashmap">
+		<![CDATA[
+			SELECT
+				*
+			FROM
+				PROFILE_FILE
+			WHERE ID = #{ID}
+		]]>
+	</select>
+	
+	<!-- 위탁 장소 이미지 가져오기 --> <!-- 리스트 -->
+	<select id="selectPetsitterAddImg" parameterType="hashmap" resultType="hashmap">
+		<![CDATA[
+			SELECT
+				*
+			FROM
+				PETSITTER_ADD_IMG
+			WHERE PSMEM_ID = #{ID} AND FILE_DEL = 'N'
+		]]>
+	</select>
+	
+	<!-- 펫 정보 일괄 가져오기  펫 + 추가 + 프로필 --> <!-- 리스트 -->
+	<select id="selectPet" 	parameterType="hashmap" resultType="hashmap">
+		<![CDATA[
+			SELECT
+				ID, PET_ID, NAME, SEX, KIND, PET_SIZE, KG, DATA_NUM, AGE, SEX_CHK, CASE,
+				PET_ZIP, PET_ADD1, PET_ADD2, PET_ADD_ADD, PET_PHN, FEATURE, USE_TIME,
+				RESPONSE, HUMAN, BARK, TRAINING, DDONG, TOUCH, ATTACK,
+				VACCINATION, ORI_FILE_NAME, STO_FILE_NAME
+			FROM
+				(
+				SELECT 
+					PET_MEMBER.ID AS ID,
+					PET_MEMBER.PET_MEM_ID AS PET_ID,
+					PET_MEMBER.PET_MEM_NAME AS NAME,
+					PET_MEMBER.PET_MEM_SEX AS SEX,
+					PET_MEMBER.PET_MEM_KIND AS KIND,
+					PET_MEMBER.PET_MEM_SIZE AS PET_SIZE,
+					PET_MEMBER.PET_MEM_WEIGHT AS KG,
+					PET_MEMBER.PET_NO AS DATA_NUM,
+					PET_MEMBER.PET_MEM_AGE AS AGE,
+					PET_MEMBER.PET_MEM_SEX_CHECK AS SEX_CHK,
+					PET_MEMBER.PET_MEM_CASE AS CASE,
+					PET_MEMBER.PET_MEM_ZIPCODE AS PET_ZIP,
+					PET_MEMBER.PET_MEM_ADDRESS1 AS PET_ADD1,
+					PET_MEMBER.PET_MEM_ADDRESS2 AS PET_ADD2,
+					PET_MEMBER.PET_MEM_ADDRESS_ADD AS PET_ADD_ADD,
+					PET_MEMBER.PET_MEM_PHONE AS PET_PHN,
+					PET_MEMBER.PET_MEM_FEATURE AS FEATURE,
+					PET_MEMBER.PET_MEM_USE_TIME AS USE_TIME,
+					PET_MEMBER_ADD.PET_MEMBER_ADD_RESPONSE AS RESPONSE,
+					PET_MEMBER_ADD.PET_MEMBER_ADD_HUMAN AS HUMAN,
+					PET_MEMBER_ADD.PET_MEMBER_ADD_BARK AS BARK,
+					PET_MEMBER_ADD.PET_MEMBER_ADD_TRAINING AS TRAINING,
+					PET_MEMBER_ADD.PET_MEMBER_ADD_DDONG_STYLE AS DDONG,
+					PET_MEMBER_ADD.PET_MEMBER_ADD_SHARP_BODY AS TOUCH,
+					PET_MEMBER_ADD.PET_MEMBER_ADD_ATTACK AS ATTACK,
+					PET_MEMBER_ADD.PET_MEMBER_ADD_VACCINATION AS VACCINATION,
+					PROFILE_FILE.PROFILE_ORIGINAL_FILE_NAME AS ORI_FILE_NAME,
+					PROFILE_FILE.PROFILE_STORED_FILE_NAME AS STO_FILE_NAME
+				FROM PET_MEMBER, PET_MEMBER_ADD, PROFILE_FILE
+				WHERE PET_MEMBER.PET_MEM_ID = PET_MEMBER_ADD.PET_MEM_ID AND PET_MEMBER.PET_MEM_ID = PROFILE_FILE.ID
+				)
+			WHERE ID = #{ID}
+		]]>
+	</select>
+	
+	<!-- 자격증 파일 가져오기 -->
+	<select id="selectCertificate" parameterType="hashmap" resultType="hashmap">
+		<![CDATA[
+			SELECT
+				*
+			FROM
+				CERTI_FILE
+			WHERE PSMEM_ID = #{ID} AND PROFILE_DEL = 'N'
+		]]>
+	</select>
+	<!-- 아래는 사용 안함 -->
+	<!-- 펫 추가 정보 일괄 가져오기  리스트
+	<select id="selectPetAdd" parameterType="hashmap" resultType="hashmap">
+		<![CDATA[
+			SELECT
+				*
+			FROM
+				PET_MEMBER_ADD
+			WHERE ID = #{ID}
+		]]>
+	</select> -->
+	
+	<!-- 매치 관련 정보 가져오기 끝 -->
+	
+	
+	<!-- 매치 등록하기 --> <!-- 만들어야 함. 리스트를 저장하는 방식. mybatis or list -->
+	<select id="matchInsert" parameterType="hashmap" resultType="hashmap">
+		<![CDATA[
+			INSERT INTO MATCH_REGISTER (
+				MATCH_NO,
+				PSMEM_ID,
+				PSMEM_NAME,
+				PSMEM_ADDRESS1,
+				PSMEM_CLASS,
+				MATCH_PLACE_IMAGE,
+				MATCH_SUBJECT,
+				MATCH_DATE,
+				MATCH_CHECK_IN,
+				MATCH_CHECK_OUT,
+				POSSIBLE_SERVICE,
+				PRICE_SMALL_ALL,
+				PRICE_SMALL_HALF,
+				PRICE_MEDIUM_ALL,
+				PRICE_MEDIUM_HALF,
+				PRICE_LARGE_ALL,
+				PRICE_LARGE_HALF,
+				MATCH_REGISTER_DATE
+			)
+			VALUES (
+				MATCH_REGISTER_SEQ.NEXTVAL,
+				#{PSMEM_ID},
+				#{name},
+				#{address1},
+				#{GRADE},
+				#{firstFile},
+				#{SUBJECT},
+				#{basicDate},
+				#{checkInTime},
+				#{checkOutTime},
+				#{serviceArr},
+				#{smallAll},
+				#{smallHalf},
+				#{mediumAll},
+				#{mediumHalf},
+				#{largeAll},
+				#{largeHalf},
+				SYSDATE
+			)
+		]]>
+	</select>
+	
+	
+	<!-- 매치 리스트 뽑기 -->
+	<!-- 전부 -->
+	<select id="matchListAll" parameterType="hashmap" resultType="hashmap">
+		<![CDATA[
+			SELECT
+				ID, NAME, COUNT, JOIN_DATE, MATCH_NO, ADDRESS,
+				CLASS, IMAGE, SUBJECT, DEL_GB, MATCH_DATE,
+				SERVICE, SMALL_ALL, SMALL_HALF, MEDIUM_ALL, MEDIUM_HALF,
+				LARGE_ALL, LARGE_HALF
+			FROM
+				(
+				SELECT
+					PETSITTER.PSMEM_ID AS ID,
+					PETSITTER.NAME AS NAME,
+					PETSITTER.USE_TIME AS COUNT,
+					PETSITTER.JOIN_DATE AS JOIN_DATE,
+					MATCH_REGISTER.MATCH_NO AS MATCH_NO,
+					MATCH_REGISTER.PSMEM_ADDRESS1 AS ADDRESS,
+					MATCH_REGISTER.PSMEM_CLASS AS CLASS,
+					MATCH_REGISTER.MATCH_PLACE_IMAGE AS IMAGE,
+					MATCH_REGISTER.MATCH_SUBJECT AS SUBJECT,
+					MATCH_REGISTER.DEL_GB AS DEL_GB,
+					MATCH_REGISTER.MATCH_REGISTER_DATE AS MATCH_DATE,
+					MATCH_REGISTER.POSSIBLE_SERVICE AS SERVICE,
+					MATCH_REGISTER.PRICE_SMALL_ALL AS SMALL_ALL,
+					MATCH_REGISTER.PRICE_SMALL_HALF AS SMALL_HALF,
+					MATCH_REGISTER.PRICE_MEDIUM_ALL AS MEDIUM_ALL,
+					MATCH_REGISTER.PRICE_MEDIUM_HALF AS MEDIUM_HALF,
+					MATCH_REGISTER.PRICE_LARGE_ALL AS LARGE_ALL,
+					MATCH_REGISTER.PRICE_LARGE_HALF AS LARGE_HALF
+				FROM
+					PETSITTER, MATCH_REGISTER
+				WHERE
+					PETSITTER.PSMEM_ID = MATCH_REGISTER.PSMEM_ID
+			)
+			WHERE
+				DEL_GB = 'N'
+			ORDER BY MATCH_DATE DESC
+		]]>
+	</select>
+	
+	<!-- 프로 펫시터만 -->
+	<select id="matchListPro" parameterType="hashmap" resultType="hashmap">
+		<![CDATA[
+			SELECT
+				ID, NAME, COUNT, JOIN_DATE, MATCH_NO, ADDRESS,
+				CLASS, IMAGE, SUBJECT, DEL_GB, MATCH_DATE,
+				SERVICE, SMALL_ALL, SMALL_HALF, MEDIUM_ALL, MEDIUM_HALF,
+				LARGE_ALL, LARGE_HALF
+			FROM
+				(
+				SELECT
+					PETSITTER.PSMEM_ID AS ID,
+					PETSITTER.NAME AS NAME,
+					PETSITTER.USE_TIME AS COUNT,
+					PETSITTER.JOIN_DATE AS JOIN_DATE,
+					MATCH_REGISTER.MATCH_NO AS MATCH_NO,
+					MATCH_REGISTER.PSMEM_ADDRESS1 AS ADDRESS,
+					MATCH_REGISTER.PSMEM_CLASS AS CLASS,
+					MATCH_REGISTER.MATCH_PLACE_IMAGE AS IMAGE,
+					MATCH_REGISTER.MATCH_SUBJECT AS SUBJECT,
+					MATCH_REGISTER.DEL_GB AS DEL_GB,
+					MATCH_REGISTER.MATCH_REGISTER_DATE AS MATCH_DATE,
+					MATCH_REGISTER.POSSIBLE_SERVICE AS SERVICE,
+					MATCH_REGISTER.PRICE_SMALL_ALL AS SMALL_ALL,
+					MATCH_REGISTER.PRICE_SMALL_HALF AS SMALL_HALF,
+					MATCH_REGISTER.PRICE_MEDIUM_ALL AS MEDIUM_ALL,
+					MATCH_REGISTER.PRICE_MEDIUM_HALF AS MEDIUM_HALF,
+					MATCH_REGISTER.PRICE_LARGE_ALL AS LARGE_ALL,
+					MATCH_REGISTER.PRICE_LARGE_HALF AS LARGE_HALF
+				FROM
+					PETSITTER, MATCH_REGISTER
+				WHERE
+					PETSITTER.PSMEM_ID = MATCH_REGISTER.PSMEM_ID
+			)
+			WHERE
+				DEL_GB = 'N' AND CLASS = '프로'
+			ORDER BY COUNT DESC
+		]]>
+	</select>
+	
+	<!-- 신입 펫시터만 -->
+	<select id="matchListNew" parameterType="hashmap" resultType="hashmap">
+		<![CDATA[
+			SELECT
+				ID, NAME, COUNT, JOIN_DATE, MATCH_NO, ADDRESS,
+				CLASS, IMAGE, SUBJECT, DEL_GB, MATCH_DATE,
+				SERVICE, SMALL_ALL, SMALL_HALF, MEDIUM_ALL, MEDIUM_HALF,
+				LARGE_ALL, LARGE_HALF
+			FROM
+				(
+				SELECT
+					PETSITTER.PSMEM_ID AS ID,
+					PETSITTER.NAME AS NAME,
+					PETSITTER.USE_TIME AS COUNT,
+					PETSITTER.JOIN_DATE AS JOIN_DATE,
+					MATCH_REGISTER.MATCH_NO AS MATCH_NO,
+					MATCH_REGISTER.PSMEM_ADDRESS1 AS ADDRESS,
+					MATCH_REGISTER.PSMEM_CLASS AS CLASS,
+					MATCH_REGISTER.MATCH_PLACE_IMAGE AS IMAGE,
+					MATCH_REGISTER.MATCH_SUBJECT AS SUBJECT,
+					MATCH_REGISTER.DEL_GB AS DEL_GB,
+					MATCH_REGISTER.MATCH_REGISTER_DATE AS MATCH_DATE,
+					MATCH_REGISTER.POSSIBLE_SERVICE AS SERVICE,
+					MATCH_REGISTER.PRICE_SMALL_ALL AS SMALL_ALL,
+					MATCH_REGISTER.PRICE_SMALL_HALF AS SMALL_HALF,
+					MATCH_REGISTER.PRICE_MEDIUM_ALL AS MEDIUM_ALL,
+					MATCH_REGISTER.PRICE_MEDIUM_HALF AS MEDIUM_HALF,
+					MATCH_REGISTER.PRICE_LARGE_ALL AS LARGE_ALL,
+					MATCH_REGISTER.PRICE_LARGE_HALF AS LARGE_HALF
+				FROM
+					PETSITTER, MATCH_REGISTER
+				WHERE
+					PETSITTER.PSMEM_ID = MATCH_REGISTER.PSMEM_ID
+				)
+			WHERE
+				DEL_GB = 'N' AND CLASS = '신입'
+			ORDER BY JOIN_DATE DESC
+		]]>
+	</select>
+	
+	<!-- 매치 디테일 -->
+	<select id="matchDetailAdd" parameterType="hashmap" resultType="hashmap">
+			SELECT
+				*
+			FROM
+				MATCH_REGISTER
+			WHERE
+				<choose>
+					<when test="seq != null">
+						MATCH_NO = #{seq}
+					</when>
+					<when test="ID != null">
+						PSMEM_ID = #{ID}
+					</when>
+				</choose>
+	</select>
+	
+	<!-- 검색 기능 -->
+	<select id="matchSearch" parameterType="hashmap" resultType="hashmap">
+			SELECT
+				*
+			FROM
+				MATCH_REGISTER
+			WHERE
+				DEL_GB = 'N' AND PSMEM_ADDRESS1 LIKE '%'||#{add1}||'%' AND PSMEM_ADDRESS1 LIKE '%'||#{add2}||'%' 
+					<if test="searchDay != null and searchDay != ''">
+						<foreach collection="searchDay" item="day">
+							AND MATCH_DATE LIKE '%'||#{day}||'%'
+						</foreach>
+					</if>
+					<if test="serviceLt != null and serviceLt != ''">
+						<foreach item="item" collection="serviceLt" index="index">
+							AND POSSIBLE_SERVICE LIKE '%'||#{item}||'%'
+						</foreach>
+					</if>
+			ORDER BY MATCH_NO DESC
+	</select>
+				
+	<!-- 멤버 정보 가져오기 -->
+	<select id="selectMember" parameterType="hashmap" resultType="hashmap">
+		<![CDATA[
+			SELECT
+				MEM_ID, MEM_NAME, MEM_PHONE, MEM_EMAIL, MEM_SEX, MEM_ZIP,
+				MEM_ADD1, MEM_ADD2, MEM_ADD_ADD, MEM_PROFILE
+			FROM
+				(
+				SELECT
+					MEMBER.MEM_ID AS MEM_ID,
+					MEMBER.NAME AS MEM_NAME,
+					MEMBER.PHONE AS MEM_PHONE,
+					MEMBER.EMAIL AS MEM_EMAIL,
+					MEMBER.SEX AS MEM_SEX,
+					MEMBER.ZIPCODE AS MEM_ZIP,
+					MEMBER.ADDRESS1 AS MEM_ADD1,
+					MEMBER.ADDRESS2 AS MEM_ADD2,
+					MEMBER.ADDRESS_ADD AS MEM_ADD_ADD,
+					PROFILE_FILE.PROFILE_STORED_FILE_NAME AS MEM_PROFILE
+				FROM
+					MEMBER, PROFILE_FILE
+				WHERE
+					MEMBER.MEM_ID = PROFILE_FILE.ID
+				)
+			WHERE MEM_ID = #{MEM_ID}
+		]]>
+	</select>
+	
+	<!-- 펫시터 프로필 사진 가져오기 한줄 -->
+	<select id="selectMemberProfile" parameterType="hashmap" resultType="hashmap">
+		<![CDATA[
+			SELECT
+				*
+			FROM
+				PROFILE_FILE
+			WHERE ID = #{MEM_ID}
+		]]>
+	</select>
+	
+	<!-- 멤버 펫 정보 일괄 가져오기  펫 + 추가 + 프로필 --> <!-- 리스트 -->
+	<select id="selectMemPet" parameterType="hashmap" resultType="hashmap">
+			SELECT
+				ID, PET_ID, NAME, SEX, KIND, PET_SIZE, KG, DATA_NUM, AGE, SEX_CHK, CASE,
+				PET_ZIP, PET_ADD1, PET_ADD2, PET_ADD_ADD, PET_PHN, FEATURE, USE_TIME,
+				RESPONSE, HUMAN, BARK, TRAINING, DDONG, TOUCH, ATTACK,
+				VACCINATION, ORI_FILE_NAME, STO_FILE_NAME
+			FROM
+				(
+				SELECT 
+					PET_MEMBER.ID AS ID,
+					PET_MEMBER.PET_MEM_ID AS PET_ID,
+					PET_MEMBER.PET_MEM_NAME AS NAME,
+					PET_MEMBER.PET_MEM_SEX AS SEX,
+					PET_MEMBER.PET_MEM_KIND AS KIND,
+					PET_MEMBER.PET_MEM_SIZE AS PET_SIZE,
+					PET_MEMBER.PET_MEM_WEIGHT AS KG,
+					PET_MEMBER.PET_NO AS DATA_NUM,
+					PET_MEMBER.PET_MEM_AGE AS AGE,
+					PET_MEMBER.PET_MEM_SEX_CHECK AS SEX_CHK,
+					PET_MEMBER.PET_MEM_CASE AS CASE,
+					PET_MEMBER.PET_MEM_ZIPCODE AS PET_ZIP,
+					PET_MEMBER.PET_MEM_ADDRESS1 AS PET_ADD1,
+					PET_MEMBER.PET_MEM_ADDRESS2 AS PET_ADD2,
+					PET_MEMBER.PET_MEM_ADDRESS_ADD AS PET_ADD_ADD,
+					PET_MEMBER.PET_MEM_PHONE AS PET_PHN,
+					PET_MEMBER.PET_MEM_FEATURE AS FEATURE,
+					PET_MEMBER.PET_MEM_USE_TIME AS USE_TIME,
+					PET_MEMBER_ADD.PET_MEMBER_ADD_RESPONSE AS RESPONSE,
+					PET_MEMBER_ADD.PET_MEMBER_ADD_HUMAN AS HUMAN,
+					PET_MEMBER_ADD.PET_MEMBER_ADD_BARK AS BARK,
+					PET_MEMBER_ADD.PET_MEMBER_ADD_TRAINING AS TRAINING,
+					PET_MEMBER_ADD.PET_MEMBER_ADD_DDONG_STYLE AS DDONG,
+					PET_MEMBER_ADD.PET_MEMBER_ADD_SHARP_BODY AS TOUCH,
+					PET_MEMBER_ADD.PET_MEMBER_ADD_ATTACK AS ATTACK,
+					PET_MEMBER_ADD.PET_MEMBER_ADD_VACCINATION AS VACCINATION,
+					PROFILE_FILE.PROFILE_ORIGINAL_FILE_NAME AS ORI_FILE_NAME,
+					PROFILE_FILE.PROFILE_STORED_FILE_NAME AS STO_FILE_NAME
+				FROM PET_MEMBER, PET_MEMBER_ADD, PROFILE_FILE
+				WHERE PET_MEMBER.PET_MEM_ID = PET_MEMBER_ADD.PET_MEM_ID AND PET_MEMBER.PET_MEM_ID = PROFILE_FILE.ID
+				)
+			WHERE
+			<if test="MEM_ID != null">
+				ID = #{MEM_ID}
+			</if>
+			<if test="PET_ARR != null">
+				<foreach collection="PET_ARR" item="pet" separator=" OR ">
+					PET_ID = #{pet}
+				</foreach>
+			</if>
+			<if test="ID != null">
+				ID = #{ID}
+			</if>
+	</select>
+		
+	<!-- 구: 펫시팅 등록하기 -->
+	<!-- <select id="insertPetsitting" parameterType="hashmap" resultType="hashmap">
+		<![CDATA[		
+			INSERT INTO PETSITING_PROGRESS_INFO (
+				PROGRESS_NO,
+				MATCH_REGISTER_NO,
+				PSMEM_ID,
+				MEM_ID,
+				PET_ID,
+				PRICE,
+				PETSITTING_DAYS,
+				CHECK_IN,
+				CHECK_OUT,
+				PROGRESS_STEPS,
+				RESERVE_DATE
+			)
+			VALUES 
+				(
+				PETSITING_PROGRESS_INFO_SEQ.NEXTVAL,
+				#{MATCH_REGISTER_NO},
+				#{PSMEM_ID},
+				#{MEM_ID},
+				#{PETARR},
+				#{PRICE},
+				#{PETSITTING_DAYS},
+				#{CHECK_IN},
+				#{CHECK_OUT},
+				#{PROGRESS_STEPS},
+				sysdate
+			)
+		]]>
+	</select> -->
+	
+	<!-- 펫시팅 등록하기 바뀐 테이블 -->
+	<select id="insertPetsitting" parameterType="hashmap" resultType="hashmap">
+		<![CDATA[		
+			INSERT INTO PETSITTING_REGISTER (
+				PROGRESS_NO,
+				MATCH_REGISTER_NO,
+				PSMEM_ID,
+				P_CLASS,
+				P_NAME,
+				P_SEX,
+				P_JOB,
+				P_MOBILE,
+				P_EMAIL,
+				P_ADD1,
+				P_ADD2,
+				P_ADD_ADD,
+				P_SERVICE,
+				P_CERTI,
+				P_SCHOOL,
+				MEM_ID,
+				M_NAME,
+				M_SEX,
+				M_MOBILE,
+				M_EMAIL,
+				M_ADD1,
+				M_ADD2,
+				M_ADD_ADD,
+				PET_ID,
+				PRICE,
+				PRICE_S_A,
+				PRICE_S_H,
+				PRICE_M_A,
+				PRICE_M_H,
+				PRICE_L_A,
+				PRICE_L_H,
+				PETSITTING_DAYS,
+				CHECK_IN,
+				CHECK_OUT,
+				PROGRESS_STEPS,
+				RESERVE_DATE
+			)
+			VALUES 
+				(
+				PETSITTING_REGISTER_SEQ.NEXTVAL,
+				#{MATCH_REGISTER_NO},
+				#{PSMEM_ID},
+				#{P_CLASS},
+				#{P_NAME},
+				#{P_SEX},
+				#{P_JOB},
+				#{P_MOBILE},
+				#{P_EMAIL},
+				#{P_ADD1},
+				#{P_ADD2},
+				#{P_ADD_ADD},
+				#{P_SERVICE},
+				#{P_CERTI},
+				#{P_SCHOOL},
+				#{MEM_ID},
+				#{M_NAME},
+				#{M_SEX},
+				#{M_MOBILE},
+				#{M_EMAIL},
+				#{M_ADD1},
+				#{M_ADD2},
+				#{M_ADD_ADD},
+				#{PET_ID},
+				#{PRICE},
+				#{PRICE_SMALL_ALL},
+				#{PRICE_SMALL_HALF},
+				#{PRICE_MEDIUM_ALL},
+				#{PRICE_MEDIUM_HALF},
+				#{PRICE_LARGE_ALL},
+				#{PRICE_LARGE_HALF},
+				#{PETSITTING_DAYS},
+				#{CHECK_IN},
+				#{CHECK_OUT},
+				1,
+				SYSDATE
+			)
+		]]>
+	</select>
+	
+	<!-- 펫 크기 가져오기 -->
+	<select id="selectPetSize" parameterType="hashmap" resultType="hashmap">
+		<![CDATA[		
+			SELECT
+				PET_MEM_SIZE
+			FROM
+				PET_MEMBER
+			WHERE
+				PET_MEM_ID = #{PET_MEM_ID}
+		]]>
+	</select>
+	
+	<!-- 임시 : 펫시팅 정보 가져오기 -->
+	<select id="selectPetsittingMem" parameterType="hashmap" resultType="hashmap">
+		<![CDATA[	
+			SELECT *
+			FROM
+				PETSITTING_REGISTER
+			WHERE
+				MEM_ID = #{ID} AND DEL_GB = 'N'
+		]]>
+	</select>
+	
+	<!-- 임시 : 펫시팅 정보 가져오기 -->
+	<select id="selectPetsittingPst" parameterType="hashmap" resultType="hashmap">
+		<![CDATA[	
+			SELECT *
+			FROM
+				PETSITTING_REGISTER
+			WHERE
+				PSMEM_ID = #{ID} AND DEL_GB = 'N'
+		]]>
+	</select>
+
+<!-- 임시 : 펫시팅 디테일 가져오기  -->
+	<select id="petsittingDetail" parameterType="hashmap" resultType="hashmap">
+		<![CDATA[	
+			SELECT *
+			FROM
+				PETSITTING_REGISTER
+			WHERE
+				PROGRESS_NO = #{PNUM}
+		]]>
+	</select>	
+	
+	<!-- 펫시팅 진행 단계 업데이트  -->
+	<select id="updatePetsittingStep" parameterType="hashmap" resultType="hashmap">
+		
+			UPDATE
+				PETSITTING_REGISTER
+			SET
+				PROGRESS_STEPS = #{STEP}
+			<if test="STEP == 3">
+				, PAYMENT_DAY = SYSDATE
+			</if>
+			<if test="STEP == 4">
+				, PROGRESS_END_DAY = SYSDATE
+			</if>
+			WHERE
+				PROGRESS_NO = #{PNUM}
+	</select>
+
+	<!-- 펫시팅 취소  -->
+	<select id="deletePetsitting" parameterType="hashmap" resultType="hashmap">
+		<![CDATA[	
+			UPDATE
+				PETSITTING_REGISTER
+			SET
+				DEL_GB = 'Y',
+				DEL_NAME = #{DEL_NAME}
+			WHERE
+				PROGRESS_NO = #{PNUM}
+		]]>
+	</select>
+	
+	<!-- 금액 부분 저장  -->
+	<select id="insertCash" parameterType="hashmap" resultType="hashmap">
+		<![CDATA[
+			INSERT INTO CASH_CARE (	
+				CASH_CARE_NO,
+				PROGRESS_NO,
+				MEM_ID,
+				PSMEM_ID,
+				CASH_CARE_SELECT,
+				CASH_CARE_CHECK,
+				PRICE,
+				CASH_CARE_DATE
+			)
+			VALUES (
+				CASH_CARE_SEQ.NEXTVAL,
+				#{PNUM},
+				#{M_ID},
+				#{P_ID},
+				'입금 대기',
+				'N',
+				#{PRICE},
+				SYSDATE
+			)
+		]]>
+	</select>
+	
+	<!-- 거래 단계 업데이트  -->
+	<select id="updateCash" parameterType="hashmap" resultType="hashmap">
+		<![CDATA[
+			UPDATE
+				CASH_CARE
+			SET	
+				CASH_CARE_SELECT = #{CASH_CARE_SELECT}
+			WHERE
+				PROGRESS_NO = #{PNUM}
+		]]>
+	</select>
+	
+	<!-- 금액 부분 수정 
+	<select id="updateCash" parameterType="hashmap" resultType="hashmap">
+			UPDATE
+				CASH_CARE
+			SET
+				CASH_CARE_SELECT = #{CASHSTEP}
+			<if test="CASH_STEP == '가능'">
+				, CASH_CARE_CHECK = 'Y'
+			</if>
+			<if test="CASH_STEP == '진행'">
+				, CASH_CARE_CHECK = 'N'
+			</if>
+			WHERE
+				PROGRESS_NO = #{PNUM}WITHDRAW_DATE(출금날짜)
+	</select> -->
+	
+	<!-- 멤버 카운트 업  -->
+	<select id="updateMemberCount" parameterType="hashmap" resultType="hashmap">
+		<![CDATA[
+			UPDATE
+				MEMBER
+			SET
+				USE_TIME = USE_TIME + 1
+			WHERE
+				MEM_ID = #{MEM_ID}
+		]]>
+	</select>
+	
+	<!-- 펫시터 카운트 업  -->
+	<select id="updatePetsitterCount" parameterType="hashmap" resultType="hashmap">
+		<![CDATA[
+			UPDATE
+				PETSITTER
+			SET
+				USE_TIME = USE_TIME + 1
+			WHERE
+				PSMEM_ID = #{PSMEM_ID}
+		]]>
+	</select>
+	
+	<!-- 펫 카운트 업(반복)  -->
+	<select id="updatePetCount" parameterType="hashmap" resultType="hashmap">
+			UPDATE
+				PET_MEMBER
+			SET
+				PET_MEM_USE_TIME = PET_MEM_USE_TIME + 1
+			WHERE
+			<foreach collection="PET_ARR" item="pet" separator=" OR ">
+				PET_MEM_ID = #{pet}
+			</foreach>
+	</select>
+	
+	<!-- 매치 찜 등록 -->
+	<select id="pstMarkInsert">
+		<![CDATA[
+			INSERT INTO MYPAGE_BOOK_MARK (
+				MYPAGE_BOOK_MARK_NO,
+				MEM_ID,
+				PSMEM_ID,
+				MYPAGE_BOOK_MARK_DATE
+			)
+			VALUES 
+				(
+				MYPAGE_BOOK_MARK_SEQ.NEXTVAL,
+				#{MEM_ID},
+				#{PSMEM_ID},
+				SYSDATE
+			)
+		]]>
+	</select>
+	
+	<!-- 찜 중복 확인 -->
+	<select id="pstMarkCheck" parameterType="hashmap" resultType="hashmap">
+		<![CDATA[
+			SELECT * FROM MYPAGE_BOOK_MARK
+			WHERE MEM_ID = #{MEM_ID} AND PSMEM_ID = #{PSMEM_ID}
+		]]>
+	</select>
+	
+	<!-- 매치 찜 삭제 -->
+	<select id="pstMarkDelete">
+		<![CDATA[
+			DELETE
+				MYPAGE_BOOK_MARK
+			WHERE
+				MEM_ID = #{MEM_ID} AND PSMEM_ID = #{PSMEM_ID}
+		]]>
+	</select>
+	
+	<!-- 매치 테이블에 있나 확인 -->
+	<select id="matchCheck" parameterType="hashmap" resultType="hashmap">
+		<![CDATA[
+			SELECT * FROM MATCH_REGISTER
+			WHERE PSMEM_ID = #{ID}
+		]]>
+	</select>
+	
+	<!-- 매치 수정 -->
+	<select id="matchUpdate">
+		<![CDATA[
+		 	UPDATE
+				MATCH_REGISTER
+			SET
+				MATCH_SUBJECT = #{SUBJECT},
+				MATCH_DATE = #{basicDate},
+				MATCH_CHECK_IN = #{checkInTime},
+				MATCH_CHECK_OUT = #{checkOutTime},
+				POSSIBLE_SERVICE = #{serviceArr},
+				PRICE_SMALL_ALL = #{smallAll},
+				PRICE_SMALL_HALF = #{smallHalf},
+				PRICE_MEDIUM_ALL = #{mediumAll},
+				PRICE_MEDIUM_HALF = #{mediumHalf},
+				PRICE_LARGE_ALL = #{largeAll},
+				PRICE_LARGE_HALF = #{largeHalf}
+			WHERE
+				MATCH_NO = #{MATCH_NO}
+		]]>
+	</select>
+</mapper>

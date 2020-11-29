@@ -1,0 +1,23 @@
+<%@ page pageEncoding="utf-8"%>
+
+
+<div align="center">
+
+
+	<div style="margin-top: 3em; height: 500px">
+
+		<div>
+			<img src="resources/images/Logo.png" style="margin-bottom: 2em">
+		</div>
+
+		<span style="font-size: 2.5em; margin-top: 2em;">지금 바로 이용해보세요!</span>
+
+
+		<div
+			style="border-radius: 14px; background-color: #5483EC; width: 10em; height: 4em; position: relative; top: 6em">
+			<p
+				style="color: white; font-size: 1.5em; font-weight: bold; position: relative; top: 0.6em; cursor: pointer;" onclick="location.href='/joinPage'">가입 하기</p>
+		</div>
+	</div>
+
+</div>
